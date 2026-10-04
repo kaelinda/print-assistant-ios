@@ -1,7 +1,7 @@
 import Foundation
 
-struct OCRInput: Hashable {
-    enum Kind: Hashable {
+struct OCRInput: Hashable, Sendable {
+    enum Kind: Hashable, Sendable {
         case image
         case pdf
     }
@@ -12,7 +12,7 @@ struct OCRInput: Hashable {
     let displayName: String
 }
 
-struct OCRResult: Hashable {
+struct OCRResult: Hashable, Sendable {
     let id = UUID()
     let text: String
     let sourceName: String
