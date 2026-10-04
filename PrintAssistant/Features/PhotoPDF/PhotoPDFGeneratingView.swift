@@ -58,7 +58,7 @@ struct PhotoPDFGeneratingView: View {
 
         do {
             let filename = "图片合集-\(Int(Date.now.timeIntervalSince1970)).pdf"
-            let url = try appModel.pdfService.makePhotoPDF(from: draft, filename: filename)
+            let url = try await appModel.pdfService.makePhotoPDF(from: draft, filename: filename)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(
                 name: filename,
