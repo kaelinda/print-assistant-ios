@@ -1,3 +1,4 @@
+import PDFKit
 import SwiftUI
 
 struct PDFMergeProcessingView: View {
@@ -70,7 +71,7 @@ struct PDFMergeProcessingView: View {
                 urls: draft.sources.map(\.url),
                 filename: filename
             )
-            let document = try #requireDocument(url)
+            let document = try requireDocument(url)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(
                 name: filename,
@@ -89,8 +90,8 @@ struct PDFMergeProcessingView: View {
         }
     }
 
-    private func requireDocument(_ url: URL) throws -> PDFKit.PDFDocument {
-        guard let document = PDFKit.PDFDocument(url: url) else {
+    private func requireDocument(_ url: URL) throws -> PDFDocument {
+        guard let document = PDFDocument(url: url) else {
             throw PDFOperationService.OperationError.unreadablePDF
         }
         return document
