@@ -30,8 +30,8 @@ struct DocumentLibraryTests {
         let renamed = try #require(fixture.library.document(id: record.id))
         #expect(renamed.id == record.id)
         #expect(renamed.name == "合同.pdf")
-        #expect(!FileManager.default.fileExists(atPath: oldURL.path()))
-        #expect(FileManager.default.fileExists(atPath: renamed.localURL.path()))
+        #expect(!FileManager.default.fileExists(atPath: oldURL.path))
+        #expect(FileManager.default.fileExists(atPath: renamed.localURL.path))
 
         let reloaded = DocumentLibrary(baseURL: fixture.root)
         #expect(reloaded.document(id: record.id)?.name == "合同.pdf")
@@ -89,11 +89,11 @@ struct DocumentLibraryTests {
         defer { fixture.cleanup() }
 
         let record = try fixture.add(name: "delete-me.pdf", source: .scan)
-        #expect(FileManager.default.fileExists(atPath: record.localURL.path()))
+        #expect(FileManager.default.fileExists(atPath: record.localURL.path))
 
         try fixture.library.delete(id: record.id)
 
-        #expect(!FileManager.default.fileExists(atPath: record.localURL.path()))
+        #expect(!FileManager.default.fileExists(atPath: record.localURL.path))
         #expect(fixture.library.document(id: record.id) == nil)
 
         let reloaded = DocumentLibrary(baseURL: fixture.root)
