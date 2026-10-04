@@ -1,7 +1,7 @@
 import PDFKit
 import UIKit
 
-struct PDFDocumentService {
+struct PDFDocumentService: Sendable {
     enum PDFError: LocalizedError {
         case unableToCreatePage
         case unableToDecodeImage
@@ -26,7 +26,7 @@ struct PDFDocumentService {
             document.insert(page, at: index)
         }
 
-        let url = try outputURL(filename: filename)
+        let url = try Self.outputURL(filename: filename)
 
         guard document.write(to: url) else {
             throw PDFError.unableToWrite
@@ -34,7 +34,13 @@ struct PDFDocumentService {
         return url
     }
 
-    func makePhotoPDF(from draft: PhotoPDFDraft, filename: String) throws -> URL {
+    func makePhotoPDF(from draft: PhotoPDFDraft, filename: String) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            try Self.renderPhotoPDF(from: draft, filename: filename)
+        }.value
+    }
+
+    private static func renderPhotoPDF(from draft: PhotoPDFDraft, filename: String) throws -> URL {
         for item in draft.items {
             let isReadable = autoreleasepool {
                 UIImage(data: item.data) != nil
@@ -61,7 +67,7 @@ struct PDFDocumentService {
                     UIColor.white.setFill()
                     context.cgContext.fill(bounds)
 
-                    let target = drawRect(
+                    let target = Self.drawRect(
                         imageSize: image.size,
                         inside: printable,
                         mode: draft.fitMode
@@ -90,7 +96,7 @@ struct PDFDocumentService {
         return url
     }
 
-    private func drawRect(
+    private static func drawRect(
         imageSize: CGSize,
         inside container: CGRect,
         mode: PhotoPDFDraft.FitMode
@@ -118,12 +124,12 @@ struct PDFDocumentService {
         )
     }
 
-    private func outputURL(filename: String) throws -> URL {
+    private static func outputURL(filename: String) throws -> URL {
         let directory = try documentsDirectory()
         return directory.appending(path: filename, directoryHint: .notDirectory)
     }
 
-    private func documentsDirectory() throws -> URL {
+    private static func documentsDirectory() throws -> URL {
         let base = try FileManager.default.url(
             for: .documentDirectory,
             in: .userDomainMask,
