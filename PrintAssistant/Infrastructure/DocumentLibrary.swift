@@ -225,6 +225,7 @@ final class DocumentLibrary {
             if fileExists && FileManager.default.fileExists(atPath: stagedURL.path()) {
                 try? FileManager.default.moveItem(at: stagedURL, to: record.localURL)
             }
+            try? persist()
             persistenceError = error.localizedDescription
             throw error
         }
