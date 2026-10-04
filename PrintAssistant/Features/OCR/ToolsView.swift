@@ -39,8 +39,21 @@ struct ToolsView: View {
                 }
             }
 
+            Section("PDF 工具") {
+                Button {
+                    appModel.push(.pdfSplitSource)
+                } label: {
+                    toolRow(
+                        title: "拆分 PDF",
+                        subtitle: "按页码范围生成多个新文件",
+                        systemImage: "scissors"
+                    )
+                }
+            }
+
             Section("即将实现") {
-                Label("PDF 工具箱", systemImage: "doc.on.doc")
+                Label("合并 PDF", systemImage: "doc.on.doc")
+                Label("页面管理", systemImage: "rectangle.3.group")
             }
             .foregroundStyle(.secondary)
         }
