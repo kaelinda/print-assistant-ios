@@ -25,7 +25,7 @@ struct PDFCompressionServiceTests {
             #expect(output.pageCount == 2)
         } catch PDFCompressionService.CompressionError.noMeaningfulSavings {
             #expect(!FileManager.default.fileExists(
-                atPath: fixture.root.appending(path: "compressed.pdf").path()
+                atPath: fixture.root.appending(path: "compressed.pdf").path
             ))
         }
 
