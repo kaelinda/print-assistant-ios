@@ -94,14 +94,14 @@ struct PDFOperationService: Sendable {
                         )
                     }
 
-                    let url = try Self.writeVerified(
+                    let outputURL = try Self.writeVerified(
                         document,
                         expectedPageCount: range.count,
                         filename: "\(filenamePrefix)-\(index + 1).pdf",
                         directory: directory,
                         protectedInputs: [url]
                     )
-                    outputs.append(url)
+                    outputs.append(outputURL)
                 }
                 return outputs
             } catch {
