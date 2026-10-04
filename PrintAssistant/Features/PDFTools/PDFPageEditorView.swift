@@ -5,9 +5,11 @@ struct PDFPageEditorView: View {
     @Environment(AppModel.self) private var appModel
     @State private var draft: PDFPageManagementDraft
     @State private var isNavigatingForward = false
+    private let previewDocument: PDFDocument?
 
     init(draft: PDFPageManagementDraft) {
         _draft = State(initialValue: draft)
+        previewDocument = PDFDocument(url: draft.source.url)
     }
 
     var body: some View {
@@ -83,10 +85,7 @@ struct PDFPageEditorView: View {
 
     @ViewBuilder
     private func thumbnail(_ index: Int) -> some View {
-        if
-            let document = PDFDocument(url: draft.source.url),
-            let page = document.page(at: index)
-        {
+        if let page = previewDocument?.page(at: index) {
             Image(uiImage: page.thumbnail(
                 of: CGSize(width: 180, height: 240),
                 for: .mediaBox
