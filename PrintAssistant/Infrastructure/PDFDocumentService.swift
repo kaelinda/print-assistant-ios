@@ -35,13 +35,6 @@ struct PDFDocumentService {
     }
 
     func makePhotoPDF(from draft: PhotoPDFDraft, filename: String) throws -> URL {
-        let images = try draft.items.map { item -> UIImage in
-            guard let image = UIImage(data: item.data) else {
-                throw PDFError.unableToDecodeImage
-            }
-            return image
-        }
-
         let pageSize = draft.paper.sizeInPoints
         let bounds = CGRect(origin: .zero, size: pageSize)
         let printable = bounds.insetBy(dx: draft.marginPoints, dy: draft.marginPoints)
@@ -50,7 +43,11 @@ struct PDFDocumentService {
 
         do {
             try renderer.writePDF(to: url) { context in
-                for image in images {
+                for item in draft.items {
+                    guard let image = UIImage(data: item.data) else {
+                        continue
+                    }
+
                     context.beginPage()
                     UIColor.white.setFill()
                     context.cgContext.fill(bounds)
