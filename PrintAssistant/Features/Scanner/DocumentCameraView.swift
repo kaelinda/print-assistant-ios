@@ -18,19 +18,40 @@ struct DocumentCameraView: UIViewControllerRepresentable {
 
     final class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
         let parent: DocumentCameraView
-        init(parent: DocumentCameraView) { self.parent = parent }
 
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+        init(parent: DocumentCameraView) {
+            self.parent = parent
+        }
+
+        func documentCameraViewController(
+            _ controller: VNDocumentCameraViewController,
+            didFinishWith scan: VNDocumentCameraScan
+        ) {
             let images = (0..<scan.pageCount).map(scan.imageOfPage(at:))
-            controller.dismiss(animated: true) { self.parent.onComplete(images) }
+            Task { @MainActor [parent] in
+                controller.dismiss(animated: true) {
+                    parent.onComplete(images)
+                }
+            }
         }
 
         func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
-            controller.dismiss(animated: true) { self.parent.onCancel() }
+            Task { @MainActor [parent] in
+                controller.dismiss(animated: true) {
+                    parent.onCancel()
+                }
+            }
         }
 
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
-            controller.dismiss(animated: true) { self.parent.onFailure(error) }
+        func documentCameraViewController(
+            _ controller: VNDocumentCameraViewController,
+            didFailWithError error: Error
+        ) {
+            Task { @MainActor [parent] in
+                controller.dismiss(animated: true) {
+                    parent.onFailure(error)
+                }
+            }
         }
     }
 }
