@@ -105,6 +105,24 @@ struct PDFOperationServiceTests {
     }
 
     @Test
+    func refusesToOverwriteSourceFile() async throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let source = try fixture.makePDF(name: "source.pdf", pageWidths: [100, 120])
+        let before = try Data(contentsOf: source)
+
+        await #expect(throws: PDFOperationService.OperationError.self) {
+            _ = try await fixture.service.applyPagePlan(
+                .init(sourceURL: source, pageIndexes: [1, 0]),
+                filename: "source.pdf"
+            )
+        }
+
+        #expect(try Data(contentsOf: source) == before)
+    }
+
+    @Test
     func rejectsLockedPDF() async throws {
         let fixture = try Fixture()
         defer { fixture.cleanup() }
