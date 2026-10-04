@@ -11,6 +11,7 @@ struct PDFOperationService: Sendable {
         case emptyOutput
         case unableToCopyPage
         case unableToWrite
+        case outputConflictsWithSource
 
         var errorDescription: String? {
             switch self {
@@ -22,6 +23,7 @@ struct PDFOperationService: Sendable {
             case .emptyOutput: "操作后不能生成空 PDF。"
             case .unableToCopyPage: "无法复制 PDF 页面。"
             case .unableToWrite: "无法写入 PDF 结果。"
+            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
             }
         }
     }
@@ -54,7 +56,8 @@ struct PDFOperationService: Sendable {
                 output,
                 expectedPageCount: insertionIndex,
                 filename: filename,
-                directory: directory
+                directory: directory,
+                protectedInputs: urls
             )
         }.value
     }
@@ -95,7 +98,8 @@ struct PDFOperationService: Sendable {
                         document,
                         expectedPageCount: range.count,
                         filename: "\(filenamePrefix)-\(index + 1).pdf",
-                        directory: directory
+                        directory: directory,
+                        protectedInputs: [url]
                     )
                     outputs.append(url)
                 }
@@ -132,7 +136,8 @@ struct PDFOperationService: Sendable {
                 output,
                 expectedPageCount: plan.pageIndexes.count,
                 filename: filename,
-                directory: directory
+                directory: directory,
+                protectedInputs: [plan.sourceURL]
             )
         }.value
     }
@@ -161,13 +166,19 @@ struct PDFOperationService: Sendable {
         _ document: PDFDocument,
         expectedPageCount: Int,
         filename: String,
-        directory: URL?
+        directory: URL?,
+        protectedInputs: [URL]
     ) throws -> URL {
         guard expectedPageCount > 0 else { throw OperationError.emptyOutput }
 
         let root = try directory ?? defaultOutputDirectory()
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let url = root.appending(path: filename, directoryHint: .notDirectory)
+        let outputPath = url.standardizedFileURL.path()
+        let protectedPaths = Set(protectedInputs.map { $0.standardizedFileURL.path() })
+        guard !protectedPaths.contains(outputPath) else {
+            throw OperationError.outputConflictsWithSource
+        }
 
         guard document.write(to: url) else {
             throw OperationError.unableToWrite
