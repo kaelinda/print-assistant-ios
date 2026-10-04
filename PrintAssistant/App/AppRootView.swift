@@ -60,6 +60,14 @@ struct AppRootView: View {
                     IDCopyGeneratingView(draft: draft)
                 case .idCopySuccess(let id):
                     IDCopySuccessView(documentID: id)
+                case .pdfPageSource:
+                    PDFPageSourceView()
+                case .pdfPageEditor(let draft):
+                    PDFPageEditorView(draft: draft)
+                case .pdfPageProcessing(let draft):
+                    PDFPageProcessingView(draft: draft)
+                case .pdfPageSuccess(let id):
+                    PDFPageSuccessView(documentID: id)
                 }
             }
         }
