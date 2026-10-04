@@ -81,31 +81,6 @@ struct OCRSourceView: View {
         }
     }
 
-    private func sourceRow(title: String, subtitle: String, systemImage: String) -> some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: systemImage)
-                .font(.title3)
-                .foregroundStyle(DesignTokens.Color.accent)
-                .frame(width: 32)
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-                Text(title)
-                    .foregroundStyle(.primary)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
-        }
-        .contentShape(.rect)
-        .frame(minHeight: DesignTokens.minimumHitTarget)
-    }
-
     @MainActor
     private func loadPhoto(_ item: PhotosPickerItem) async {
         isLoadingSelection = true
