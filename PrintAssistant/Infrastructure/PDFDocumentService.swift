@@ -96,6 +96,83 @@ struct PDFDocumentService: Sendable {
         return url
     }
 
+    func makeIDCopyPDF(from draft: IDCopyDraft, filename: String) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            try Self.renderIDCopyPDF(from: draft, filename: filename)
+        }.value
+    }
+
+    private static func renderIDCopyPDF(from draft: IDCopyDraft, filename: String) throws -> URL {
+        guard
+            let frontData = draft.frontData,
+            let backData = draft.backData,
+            let front = UIImage(data: frontData),
+            let back = UIImage(data: backData)
+        else {
+            throw PDFError.unableToDecodeImage
+        }
+
+        let bounds = CGRect(origin: .zero, size: PhysicalPrintGeometry.a4Size)
+        let card = PhysicalPrintGeometry.id1CardSize
+        let gap = PhysicalPrintGeometry.points(millimeters: 20)
+        let totalHeight = card.height * 2 + gap
+        let firstY = bounds.midY - totalHeight / 2
+
+        let frontRect = CGRect(
+            x: bounds.midX - card.width / 2,
+            y: firstY,
+            width: card.width,
+            height: card.height
+        )
+        let backRect = CGRect(
+            x: bounds.midX - card.width / 2,
+            y: firstY + card.height + gap,
+            width: card.width,
+            height: card.height
+        )
+
+        let renderer = UIGraphicsPDFRenderer(bounds: bounds)
+        let url = try Self.outputURL(filename: filename)
+
+        do {
+            try renderer.writePDF(to: url) { context in
+                context.beginPage()
+                UIColor.white.setFill()
+                context.cgContext.fill(bounds)
+
+                Self.drawImage(front, inside: frontRect, context: context.cgContext)
+                Self.drawImage(back, inside: backRect, context: context.cgContext)
+            }
+        } catch {
+            throw PDFError.unableToWrite
+        }
+
+        guard let verification = PDFDocument(url: url), verification.pageCount == 1 else {
+            try? FileManager.default.removeItem(at: url)
+            throw PDFError.unableToWrite
+        }
+
+        do {
+            try FileManager.default.setAttributes(
+                [.protectionKey: FileProtectionType.complete],
+                ofItemAtPath: url.path()
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw PDFError.unableToWrite
+        }
+
+        return url
+    }
+
+    private static func drawImage(_ image: UIImage, inside rect: CGRect, context: CGContext) {
+        let target = drawRect(imageSize: image.size, inside: rect, mode: .fill)
+        context.saveGState()
+        context.clip(to: rect)
+        image.draw(in: target)
+        context.restoreGState()
+    }
+
     private static func drawRect(
         imageSize: CGSize,
         inside container: CGRect,

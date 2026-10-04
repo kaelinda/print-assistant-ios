@@ -26,6 +26,12 @@ final class AppModel {
         case photoPDFLayout(PhotoPDFDraft)
         case photoPDFGenerating(PhotoPDFDraft)
         case photoPDFSuccess(DocumentRecord.ID)
+
+        case idCopyCapture(IDCopyDraft, IDCopyDraft.Side)
+        case idCopyConfirm(IDCopyDraft, IDCopyDraft.Side, Data)
+        case idCopyLayout(IDCopyDraft)
+        case idCopyGenerating(IDCopyDraft)
+        case idCopySuccess(DocumentRecord.ID)
     }
 
     var selectedTab: Tab = .recent

@@ -27,9 +27,20 @@ struct ToolsView: View {
                 }
             }
 
+            Section("证件与打印") {
+                Button {
+                    appModel.push(.idCopyCapture(.init(), .front))
+                } label: {
+                    toolRow(
+                        title: "身份证复印",
+                        subtitle: "正反面采集并按实际尺寸排到 A4",
+                        systemImage: "person.text.rectangle"
+                    )
+                }
+            }
+
             Section("即将实现") {
                 Label("PDF 工具箱", systemImage: "doc.on.doc")
-                Label("证件与打印", systemImage: "person.text.rectangle")
             }
             .foregroundStyle(.secondary)
         }
