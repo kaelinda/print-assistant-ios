@@ -31,6 +31,23 @@ struct PhotoPDFGenerationTests {
         #expect(abs(bounds.height - PhotoPDFDraft.Paper.a4.sizeInPoints.height) < 1)
     }
 
+
+    @Test
+    func rejectsUnreadableImageInsteadOfDroppingPage() async {
+        let draft = PhotoPDFDraft(
+            items: [
+                .init(data: Data([0x00, 0x01, 0x02]), displayName: "broken.jpg")
+            ]
+        )
+
+        await #expect(throws: PDFDocumentService.PDFError.self) {
+            _ = try await PDFDocumentService().makePhotoPDF(
+                from: draft,
+                filename: "broken-\(UUID().uuidString).pdf"
+            )
+        }
+    }
+
     private func pngData(width: CGFloat, height: CGFloat) -> Data {
         let image = UIGraphicsImageRenderer(size: CGSize(width: width, height: height)).image { context in
             UIColor.white.setFill()
