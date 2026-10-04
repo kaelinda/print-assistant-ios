@@ -105,6 +105,28 @@ struct PDFOperationServiceTests {
     }
 
     @Test
+    func rejectsLockedPDF() async throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let source = try fixture.makePDF(name: "plain.pdf", pageWidths: [100])
+        let document = try #require(PDFDocument(url: source))
+        let locked = fixture.root.appending(path: "locked.pdf")
+        let options: [PDFDocumentWriteOption: Any] = [
+            .userPasswordOption: "secret",
+            .ownerPasswordOption: "owner-secret"
+        ]
+        #expect(document.write(to: locked, withOptions: options))
+
+        await #expect(throws: PDFOperationService.OperationError.self) {
+            _ = try await fixture.service.applyPagePlan(
+                .init(sourceURL: locked, pageIndexes: [0]),
+                filename: "locked-output.pdf"
+            )
+        }
+    }
+
+    @Test
     func rejectsCorruptInput() async throws {
         let fixture = try Fixture()
         defer { fixture.cleanup() }
