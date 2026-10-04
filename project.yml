@@ -1,0 +1,37 @@
+name: PrintAssistant
+options:
+  bundleIdPrefix: com.kaelinda
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+    DEVELOPMENT_TEAM: ""
+targets:
+  PrintAssistant:
+    type: application
+    platform: iOS
+    sources:
+      - path: PrintAssistant
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaelinda.printassistant
+        INFOPLIST_KEY_CFBundleDisplayName: 打印助手
+        INFOPLIST_KEY_NSCameraUsageDescription: 用于扫描文档、身份证和拍摄证件照。
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于选择需要转换、识别或排版的图片。
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: 用于将生成的文件或图片保存到照片。
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+    scheme:
+      testTargets:
+        - PrintAssistantTests
+  PrintAssistantTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: PrintAssistantTests
+    dependencies:
+      - target: PrintAssistant
