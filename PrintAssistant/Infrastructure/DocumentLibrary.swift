@@ -240,6 +240,11 @@ final class DocumentLibrary {
             documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path()) }
             if documents.count != decoded.count {
                 try persist()
+            } else {
+                try FileManager.default.setAttributes(
+                    [.protectionKey: FileProtectionType.complete],
+                    ofItemAtPath: indexURL.path()
+                )
             }
             persistenceError = nil
         } catch {
@@ -251,5 +256,9 @@ final class DocumentLibrary {
     private func persist() throws {
         let data = try JSONEncoder().encode(documents)
         try data.write(to: indexURL, options: [.atomic])
+        try FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: indexURL.path()
+        )
     }
 }
