@@ -1,3 +1,4 @@
+import PDFKit
 import Testing
 import UIKit
 @testable import PrintAssistant
@@ -7,7 +8,7 @@ struct PDFDocumentServiceTests {
     func createsPDFWithExpectedPageCount() throws {
         let image = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 420)).image { context in
             UIColor.white.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 300, height: 420))
+            context.cgContext.fill(CGRect(x: 0, y: 0, width: 300, height: 420))
         }
 
         let url = try PDFDocumentService().makePDF(
@@ -16,7 +17,7 @@ struct PDFDocumentServiceTests {
         )
 
         #expect(FileManager.default.fileExists(atPath: url.path()))
-        let document = PDFKit.PDFDocument(url: url)
+        let document = PDFDocument(url: url)
         #expect(document?.pageCount == 2)
 
         try? FileManager.default.removeItem(at: url)
