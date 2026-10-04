@@ -5,19 +5,43 @@ struct AppRootView: View {
 
     var body: some View {
         @Bindable var appModel = appModel
+
         NavigationStack(path: $appModel.path) {
             TabView(selection: $appModel.selectedTab) {
-                RecentView().tag(AppModel.Tab.recent).tabItem { Label("最近", systemImage: "clock") }
-                FilesView().tag(AppModel.Tab.files).tabItem { Label("文件", systemImage: "folder") }
-                ToolsView().tag(AppModel.Tab.tools).tabItem { Label("工具", systemImage: "square.grid.2x2") }
-                SearchView().tag(AppModel.Tab.search).tabItem { Label("搜索", systemImage: "magnifyingglass") }
+                RecentView()
+                    .tag(AppModel.Tab.recent)
+                    .tabItem { Label("最近", systemImage: "clock") }
+
+                FilesView()
+                    .tag(AppModel.Tab.files)
+                    .tabItem { Label("文件", systemImage: "folder") }
+
+                ToolsView()
+                    .tag(AppModel.Tab.tools)
+                    .tabItem { Label("工具", systemImage: "square.grid.2x2") }
+
+                SearchView()
+                    .tag(AppModel.Tab.search)
+                    .tabItem { Label("搜索", systemImage: "magnifyingglass") }
             }
             .navigationDestination(for: AppModel.Route.self) { route in
                 switch route {
-                case .scanner: ScannerView()
-                case .scanReview(let draft): ScanReviewView(draft: draft)
-                case .document(let id): FileDetailView(documentID: id)
-                case .pdfPreview(let id): PDFPreviewView(documentID: id)
+                case .scanner:
+                    ScannerView()
+                case .scanReview(let draft):
+                    ScanReviewView(draft: draft)
+                case .document(let id):
+                    FileDetailView(documentID: id)
+                case .pdfPreview(let id):
+                    PDFPreviewView(documentID: id)
+                case .ocrSource:
+                    OCRSourceView()
+                case .ocrCamera:
+                    OCRCameraView()
+                case .ocrProcessing(let input):
+                    OCRProcessingView(input: input)
+                case .ocrResult(let result):
+                    OCRResultView(result: result)
                 }
             }
         }
@@ -37,18 +61,20 @@ struct AppRootView: View {
 
 private struct FilesView: View {
     var body: some View {
-        ContentUnavailableView("文件", systemImage: "folder", description: Text("扫描件和生成的 PDF 会保存在这里。"))
-    }
-}
-
-private struct ToolsView: View {
-    var body: some View {
-        ContentUnavailableView("工具", systemImage: "square.grid.2x2", description: Text("OCR、PDF 工具和证件排版将在后续实现批次接入。"))
+        ContentUnavailableView(
+            "文件",
+            systemImage: "folder",
+            description: Text("扫描件和生成的 PDF 会保存在这里。")
+        )
     }
 }
 
 private struct SearchView: View {
     var body: some View {
-        ContentUnavailableView("搜索", systemImage: "magnifyingglass", description: Text("文件名和 OCR 全文搜索将在索引层完成后接入。"))
+        ContentUnavailableView(
+            "搜索",
+            systemImage: "magnifyingglass",
+            description: Text("文件名和 OCR 全文搜索将在索引层完成后接入。")
+        )
     }
 }
