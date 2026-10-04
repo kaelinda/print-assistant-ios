@@ -139,7 +139,7 @@ struct PDFProtectionService: Sendable {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let output = root.appending(path: filename, directoryHint: .notDirectory)
 
-        guard output.standardizedFileURL.path() != protectedInput.standardizedFileURL.path() else {
+        guard output.standardizedFileURL.path != protectedInput.standardizedFileURL.path else {
             throw ProtectionError.outputConflictsWithSource
         }
         return output
@@ -149,7 +149,7 @@ struct PDFProtectionService: Sendable {
         do {
             try FileManager.default.setAttributes(
                 [.protectionKey: FileProtectionType.complete],
-                ofItemAtPath: url.path()
+                ofItemAtPath: url.path
             )
         } catch {
             try? FileManager.default.removeItem(at: url)
