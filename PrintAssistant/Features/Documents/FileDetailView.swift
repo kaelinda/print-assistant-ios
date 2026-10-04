@@ -10,6 +10,7 @@ struct FileDetailView: View {
     @State private var renameText = ""
     @State private var isConfirmingDelete = false
     @State private var operationError: String?
+    @State private var isPreparingOCR = false
 
     var body: some View {
         Group {
@@ -47,6 +48,22 @@ struct FileDetailView: View {
                         PrimaryActionButton(title: "预览 / 打印", state: .enabled) {
                             appModel.push(.pdfPreview(document.id))
                         }
+
+                        Button {
+                            prepareOCR(for: document)
+                        } label: {
+                            HStack {
+                                if isPreparingOCR {
+                                    ProgressView()
+                                } else {
+                                    Image(systemName: "text.viewfinder")
+                                }
+                                Text(document.hasOCRText ? "重新识别文字" : "识别文字")
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isPreparingOCR)
                     }
                     .padding(DesignTokens.Spacing.lg)
                 }
@@ -101,6 +118,31 @@ struct FileDetailView: View {
             Button("好", role: .cancel) {}
         } message: {
             Text(operationError ?? "未知错误")
+        }
+    }
+
+    private func prepareOCR(for document: DocumentRecord) {
+        guard !isPreparingOCR else { return }
+        isPreparingOCR = true
+
+        Task {
+            do {
+                let url = document.localURL
+                let data = try await Task.detached(priority: .userInitiated) {
+                    try Data(contentsOf: url)
+                }.value
+
+                isPreparingOCR = false
+                appModel.push(.ocrProcessing(.init(
+                    data: data,
+                    kind: .pdf,
+                    displayName: document.name,
+                    associatedDocumentID: document.id
+                )))
+            } catch {
+                isPreparingOCR = false
+                operationError = error.localizedDescription
+            }
         }
     }
 
