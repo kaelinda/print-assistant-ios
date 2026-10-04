@@ -5,7 +5,7 @@ import UIKit
 
 struct PhotoPDFGenerationTests {
     @Test
-    func generatesOneA4PagePerPhoto() throws {
+    func generatesOneA4PagePerPhoto() async throws {
         let first = pngData(width: 400, height: 300)
         let second = pngData(width: 300, height: 400)
         let draft = PhotoPDFDraft(
@@ -19,7 +19,7 @@ struct PhotoPDFGenerationTests {
         )
 
         let filename = "photo-test-\(UUID().uuidString).pdf"
-        let url = try PDFDocumentService().makePhotoPDF(from: draft, filename: filename)
+        let url = try await PDFDocumentService().makePhotoPDF(from: draft, filename: filename)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let document = try #require(PDFDocument(url: url))
