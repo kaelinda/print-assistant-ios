@@ -16,7 +16,7 @@ struct OCRSourceView: View {
                 Button {
                     appModel.push(.ocrCamera)
                 } label: {
-                    sourceRow(
+                    OCRSourceRow(
                         title: "拍照识别",
                         subtitle: "拍摄纸张并提取文字",
                         systemImage: "camera"
@@ -24,7 +24,7 @@ struct OCRSourceView: View {
                 }
 
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    sourceRow(
+                    OCRSourceRow(
                         title: "从照片选择",
                         subtitle: "使用系统照片选择器",
                         systemImage: "photo"
@@ -38,7 +38,7 @@ struct OCRSourceView: View {
                 Button {
                     isImportingFile = true
                 } label: {
-                    sourceRow(
+                    OCRSourceRow(
                         title: "从文件选择",
                         subtitle: "支持图片和 PDF",
                         systemImage: "folder"
@@ -147,5 +147,37 @@ struct OCRSourceView: View {
         } catch {
             importError = error.localizedDescription
         }
+    }
+}
+
+
+private struct OCRSourceRow: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(DesignTokens.Color.accent)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                Text(title)
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .contentShape(.rect)
+        .frame(minHeight: DesignTokens.minimumHitTarget)
     }
 }
