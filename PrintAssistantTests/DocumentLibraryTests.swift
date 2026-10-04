@@ -69,6 +69,38 @@ struct DocumentLibraryTests {
     }
 
     @Test
+    func OCRIndexPersistsAcrossRelaunch() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "contract.pdf", source: .scan)
+        try fixture.library.updateSearchableText(id: record.id, text: "房屋租赁合同 月租金 6800 元")
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        let results = reloaded.visibleDocuments(query: "6800")
+
+        #expect(results.map(\.id) == [record.id])
+        #expect(reloaded.document(id: record.id)?.hasOCRText == true)
+    }
+
+    @Test
+    func deleteRemovesFileAndDoesNotReappearAfterRelaunch() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "delete-me.pdf", source: .scan)
+        #expect(FileManager.default.fileExists(atPath: record.localURL.path()))
+
+        try fixture.library.delete(id: record.id)
+
+        #expect(!FileManager.default.fileExists(atPath: record.localURL.path()))
+        #expect(fixture.library.document(id: record.id) == nil)
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        #expect(reloaded.document(id: record.id) == nil)
+    }
+
+    @Test
     func sourceFilterAndSortPreserveDocumentIDs() throws {
         let fixture = try Fixture()
         defer { fixture.cleanup() }
