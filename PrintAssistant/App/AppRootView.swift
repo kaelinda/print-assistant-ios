@@ -42,6 +42,14 @@ struct AppRootView: View {
                     OCRProcessingView(input: input)
                 case .ocrResult(let result):
                     OCRResultView(result: result)
+                case .photoPDFSelection:
+                    PhotoPDFSelectionView()
+                case .photoPDFLayout(let draft):
+                    PhotoPDFLayoutView(draft: draft)
+                case .photoPDFGenerating(let draft):
+                    PhotoPDFGeneratingView(draft: draft)
+                case .photoPDFSuccess(let id):
+                    PhotoPDFSuccessView(documentID: id)
                 }
             }
         }
