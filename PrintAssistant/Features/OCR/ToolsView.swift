@@ -5,33 +5,54 @@ struct ToolsView: View {
 
     var body: some View {
         List {
-            Section("文字与识别") {
+            Section("常用") {
+                Button {
+                    appModel.push(.photoPDFSelection)
+                } label: {
+                    toolRow(
+                        title: "图片转 PDF",
+                        subtitle: "选择、排序并按纸张尺寸生成 PDF",
+                        systemImage: "photo.on.rectangle.angled"
+                    )
+                }
+
                 Button {
                     appModel.push(.ocrSource)
                 } label: {
-                    Label {
-                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-                            Text("文字识别")
-                                .foregroundStyle(.primary)
-                            Text("从照片、PDF 或相机提取可复制文字")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "text.viewfinder")
-                            .foregroundStyle(DesignTokens.Color.accent)
-                    }
+                    toolRow(
+                        title: "文字识别",
+                        subtitle: "从照片、PDF 或相机提取可复制文字",
+                        systemImage: "text.viewfinder"
+                    )
                 }
-                .frame(minHeight: DesignTokens.minimumHitTarget)
             }
 
             Section("即将实现") {
-                Label("图片转 PDF", systemImage: "photo.on.rectangle.angled")
                 Label("PDF 工具箱", systemImage: "doc.on.doc")
                 Label("证件与打印", systemImage: "person.text.rectangle")
             }
             .foregroundStyle(.secondary)
         }
         .navigationTitle("工具")
+    }
+
+    private func toolRow(
+        title: String,
+        subtitle: String,
+        systemImage: String
+    ) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                Text(title)
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(DesignTokens.Color.accent)
+        }
+        .frame(minHeight: DesignTokens.minimumHitTarget)
     }
 }
