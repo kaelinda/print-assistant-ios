@@ -67,7 +67,7 @@ struct PDFCompressionService: Sendable {
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
 
             let output = root.appending(path: filename, directoryHint: .notDirectory)
-            guard output.standardizedFileURL.path() != sourceURL.standardizedFileURL.path() else {
+            guard output.standardizedFileURL.path != sourceURL.standardizedFileURL.path else {
                 throw CompressionError.outputConflictsWithSource
             }
 
@@ -103,7 +103,7 @@ struct PDFCompressionService: Sendable {
             do {
                 try FileManager.default.setAttributes(
                     [.protectionKey: FileProtectionType.complete],
-                    ofItemAtPath: output.path()
+                    ofItemAtPath: output.path
                 )
             } catch {
                 try? FileManager.default.removeItem(at: output)
