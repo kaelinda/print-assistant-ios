@@ -148,10 +148,10 @@ final class DocumentLibrary {
         }
 
         let newURL = old.localURL.deletingLastPathComponent().appending(path: finalName)
-        guard FileManager.default.fileExists(atPath: old.localURL.path()) else {
+        guard FileManager.default.fileExists(atPath: old.localURL.path) else {
             throw LibraryError.missingDocument
         }
-        guard !FileManager.default.fileExists(atPath: newURL.path()) || newURL == old.localURL else {
+        guard !FileManager.default.fileExists(atPath: newURL.path) || newURL == old.localURL else {
             throw LibraryError.duplicateName
         }
 
@@ -203,7 +203,7 @@ final class DocumentLibrary {
         let record = documents[index]
         let previous = documents
 
-        let fileExists = FileManager.default.fileExists(atPath: record.localURL.path())
+        let fileExists = FileManager.default.fileExists(atPath: record.localURL.path)
         let stagedURL = record.localURL
             .deletingLastPathComponent()
             .appending(path: ".deleting-\(record.id.uuidString)-\(record.localURL.lastPathComponent)")
@@ -222,7 +222,7 @@ final class DocumentLibrary {
             persistenceError = nil
         } catch {
             documents = previous
-            if fileExists && FileManager.default.fileExists(atPath: stagedURL.path()) {
+            if fileExists && FileManager.default.fileExists(atPath: stagedURL.path) {
                 try? FileManager.default.moveItem(at: stagedURL, to: record.localURL)
             }
             try? persist()
@@ -232,18 +232,18 @@ final class DocumentLibrary {
     }
 
     private func load() {
-        guard FileManager.default.fileExists(atPath: indexURL.path()) else { return }
+        guard FileManager.default.fileExists(atPath: indexURL.path) else { return }
 
         do {
             let data = try Data(contentsOf: indexURL)
             let decoded = try JSONDecoder().decode([DocumentRecord].self, from: data)
-            documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path()) }
+            documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path) }
             if documents.count != decoded.count {
                 try persist()
             } else {
                 try FileManager.default.setAttributes(
                     [.protectionKey: FileProtectionType.complete],
-                    ofItemAtPath: indexURL.path()
+                    ofItemAtPath: indexURL.path
                 )
             }
             persistenceError = nil
@@ -258,7 +258,7 @@ final class DocumentLibrary {
         try data.write(to: indexURL, options: [.atomic])
         try FileManager.default.setAttributes(
             [.protectionKey: FileProtectionType.complete],
-            ofItemAtPath: indexURL.path()
+            ofItemAtPath: indexURL.path
         )
     }
 }
