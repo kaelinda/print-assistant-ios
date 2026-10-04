@@ -21,6 +21,11 @@ final class AppModel {
         case ocrCamera
         case ocrProcessing(OCRInput)
         case ocrResult(OCRResult)
+
+        case photoPDFSelection
+        case photoPDFLayout(PhotoPDFDraft)
+        case photoPDFGenerating(PhotoPDFDraft)
+        case photoPDFSuccess(DocumentRecord.ID)
     }
 
     var selectedTab: Tab = .recent
