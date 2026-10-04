@@ -32,6 +32,10 @@ final class AppModel {
         case idCopyLayout(IDCopyDraft)
         case idCopyGenerating(IDCopyDraft)
         case idCopySuccess(DocumentRecord.ID)
+
+        case pdfMergeSelection
+        case pdfMergeProcessing(PDFMergeDraft)
+        case pdfMergeSuccess(DocumentRecord.ID)
     }
 
     var selectedTab: Tab = .recent
@@ -42,15 +46,21 @@ final class AppModel {
     let library: DocumentLibrary
     let pdfService: PDFDocumentService
     let ocrService: OCRRecognitionService
+    let pdfOperationService: PDFOperationService
+    let pdfImportService: PDFImportService
 
     init(
         library: DocumentLibrary = .init(),
         pdfService: PDFDocumentService = .init(),
-        ocrService: OCRRecognitionService = .init()
+        ocrService: OCRRecognitionService = .init(),
+        pdfOperationService: PDFOperationService = .init(),
+        pdfImportService: PDFImportService = .init()
     ) {
         self.library = library
         self.pdfService = pdfService
         self.ocrService = ocrService
+        self.pdfOperationService = pdfOperationService
+        self.pdfImportService = pdfImportService
     }
 
     func push(_ route: Route) {
