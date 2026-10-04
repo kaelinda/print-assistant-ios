@@ -16,6 +16,11 @@ final class AppModel {
         case scanReview(ScanDraft)
         case document(DocumentRecord.ID)
         case pdfPreview(DocumentRecord.ID)
+
+        case ocrSource
+        case ocrCamera
+        case ocrProcessing(OCRInput)
+        case ocrResult(OCRResult)
     }
 
     var selectedTab: Tab = .recent
@@ -25,16 +30,26 @@ final class AppModel {
 
     let library: DocumentLibrary
     let pdfService: PDFDocumentService
+    let ocrService: OCRRecognitionService
 
     init(
         library: DocumentLibrary = .init(),
-        pdfService: PDFDocumentService = .init()
+        pdfService: PDFDocumentService = .init(),
+        ocrService: OCRRecognitionService = .init()
     ) {
         self.library = library
         self.pdfService = pdfService
+        self.ocrService = ocrService
     }
 
     func push(_ route: Route) {
+        path.append(route)
+    }
+
+    func replaceTop(with route: Route) {
+        if !path.isEmpty {
+            path.removeLast()
+        }
         path.append(route)
     }
 
