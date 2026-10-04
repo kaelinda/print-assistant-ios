@@ -35,6 +35,15 @@ struct PDFDocumentService {
     }
 
     func makePhotoPDF(from draft: PhotoPDFDraft, filename: String) throws -> URL {
+        for item in draft.items {
+            let isReadable = autoreleasepool {
+                UIImage(data: item.data) != nil
+            }
+            guard isReadable else {
+                throw PDFError.unableToDecodeImage
+            }
+        }
+
         let pageSize = draft.paper.sizeInPoints
         let bounds = CGRect(origin: .zero, size: pageSize)
         let printable = bounds.insetBy(dx: draft.marginPoints, dy: draft.marginPoints)
@@ -67,6 +76,14 @@ struct PDFDocumentService {
                 }
             }
         } catch {
+            throw PDFError.unableToWrite
+        }
+
+        guard
+            let verification = PDFDocument(url: url),
+            verification.pageCount == draft.items.count
+        else {
+            try? FileManager.default.removeItem(at: url)
             throw PDFError.unableToWrite
         }
 
