@@ -202,16 +202,29 @@ final class DocumentLibrary {
         guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
         let record = documents[index]
         let previous = documents
+
+        let fileExists = FileManager.default.fileExists(atPath: record.localURL.path())
+        let stagedURL = record.localURL
+            .deletingLastPathComponent()
+            .appending(path: ".deleting-\(record.id.uuidString)-\(record.localURL.lastPathComponent)")
+
+        if fileExists {
+            try FileManager.default.moveItem(at: record.localURL, to: stagedURL)
+        }
+
         documents.remove(at: index)
 
         do {
             try persist()
-            if FileManager.default.fileExists(atPath: record.localURL.path()) {
-                try FileManager.default.removeItem(at: record.localURL)
+            if fileExists {
+                try FileManager.default.removeItem(at: stagedURL)
             }
             persistenceError = nil
         } catch {
             documents = previous
+            if fileExists && FileManager.default.fileExists(atPath: stagedURL.path()) {
+                try? FileManager.default.moveItem(at: stagedURL, to: record.localURL)
+            }
             persistenceError = error.localizedDescription
             throw error
         }
