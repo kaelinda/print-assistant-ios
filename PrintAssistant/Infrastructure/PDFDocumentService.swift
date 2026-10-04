@@ -152,11 +152,21 @@ struct PDFDocumentService: Sendable {
             throw PDFError.unableToWrite
         }
 
+        do {
+            try FileManager.default.setAttributes(
+                [.protectionKey: FileProtectionType.complete],
+                ofItemAtPath: url.path()
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw PDFError.unableToWrite
+        }
+
         return url
     }
 
     private static func drawImage(_ image: UIImage, inside rect: CGRect, context: CGContext) {
-        let target = drawRect(imageSize: image.size, inside: rect, mode: .fit)
+        let target = drawRect(imageSize: image.size, inside: rect, mode: .fill)
         context.saveGState()
         context.clip(to: rect)
         image.draw(in: target)
