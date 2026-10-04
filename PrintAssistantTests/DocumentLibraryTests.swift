@@ -116,6 +116,7 @@ struct DocumentLibraryTests {
         #expect(Set(bySize.map(\.id)) == Set([scan.id, photo.id]))
     }
 
+    @MainActor
     private final class Fixture {
         let root: URL
         let library: DocumentLibrary
