@@ -62,6 +62,13 @@ struct OCRProcessingView: View {
     private func recognize() async {
         do {
             let result = try await appModel.ocrService.recognize(input)
+            if let documentID = input.associatedDocumentID, !result.isEmpty {
+                do {
+                    try appModel.library.updateSearchableText(id: documentID, text: result.text)
+                } catch {
+                    appModel.transientMessage = "文字已识别，但搜索索引保存失败"
+                }
+            }
             appModel.replaceTop(with: .ocrResult(result))
         } catch is CancellationError {
             return

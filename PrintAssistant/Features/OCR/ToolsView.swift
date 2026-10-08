@@ -42,17 +42,20 @@ struct ToolsView: View {
             Section("PDF 工具") {
                 Button {
                     appModel.push(.pdfSplitSource)
+                }
+
+                Button {
+                    appModel.push(.pdfMergeSelection)
                 } label: {
                     toolRow(
-                        title: "拆分 PDF",
-                        subtitle: "按页码范围生成多个新文件",
-                        systemImage: "scissors"
+                        title: "合并 PDF",
+                        subtitle: "选择多个 PDF，调整顺序后生成新文件",
+                        systemImage: "doc.on.doc"
                     )
                 }
             }
 
             Section("即将实现") {
-                Label("合并 PDF", systemImage: "doc.on.doc")
                 Label("页面管理", systemImage: "rectangle.3.group")
             }
             .foregroundStyle(.secondary)

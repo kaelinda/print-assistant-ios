@@ -155,7 +155,7 @@ struct PDFDocumentService: Sendable {
         do {
             try FileManager.default.setAttributes(
                 [.protectionKey: FileProtectionType.complete],
-                ofItemAtPath: url.path()
+                ofItemAtPath: url.path
             )
         } catch {
             try? FileManager.default.removeItem(at: url)

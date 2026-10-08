@@ -33,6 +33,10 @@ final class AppModel {
         case idCopyGenerating(IDCopyDraft)
         case idCopySuccess(DocumentRecord.ID)
 
+        case pdfMergeSelection
+        case pdfMergeProcessing(PDFMergeDraft)
+        case pdfMergeSuccess(DocumentRecord.ID)
+
         case pdfSplitSource
         case pdfSplitEditor(PDFSplitDraft)
         case pdfSplitProcessing(PDFSplitDraft)
