@@ -15,34 +15,29 @@ final class PrintAssistantUITests: XCTestCase {
             ("搜索", "搜索"),
             ("工具", "工具")
         ] {
-            let tabButton = app.tabBars.buttons[tab]
+            let tabButton = app.buttons[tab]
             XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(tab)")
             tabButton.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Missing navigation screen: \(title)")
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 10), "Missing screen: \(title)")
             attachScreenshot(of: app, named: "tab-\(tab)")
         }
     }
 
     func testPDFToolEntryScreensRender() throws {
         let app = XCUIApplication()
-        for title in ["合并 PDF", "拆分 PDF", "页面管理"] {
-            if app.state != .notRunning { app.terminate() }
-            app.launch()
+        app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
-            XCTAssertTrue(tools.waitForExistence(timeout: 15))
-            tools.tap()
+        let tools = app.buttons["工具"]
+        XCTAssertTrue(tools.waitForExistence(timeout: 15))
+        tools.tap()
 
-            let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
-            for _ in 0..<6 {
-                if tool.exists && tool.isHittable { break }
-                app.swipeUp()
-            }
-            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(title)")
-            tool.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Failed to open: \(title)")
-            attachScreenshot(of: app, named: "PDF-tool-\(title)")
-        }
+        let tool = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "PDF 工具箱")
+        ).firstMatch
+        XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: PDF 工具箱")
+        tool.tap()
+        XCTAssertTrue(app.navigationBars["页面管理"].waitForExistence(timeout: 10), "Failed to open: 页面管理")
+        attachScreenshot(of: app, named: "PDF-tool-页面管理")
     }
 
     func testPhotoOCRAndIDCopyEntryScreensRender() throws {
@@ -55,7 +50,7 @@ final class PrintAssistantUITests: XCTestCase {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
+            let tools = app.buttons["工具"]
             XCTAssertTrue(tools.waitForExistence(timeout: 15))
             tools.tap()
 

@@ -2,6 +2,11 @@ import SwiftUI
 
 enum DesignTokens {
     enum Color {
+        static let canvas = SwiftUI.Color(red: 247 / 255, green: 247 / 255, blue: 249 / 255)
+        static let primaryText = SwiftUI.Color(red: 17 / 255, green: 19 / 255, blue: 24 / 255)
+        static let secondaryText = SwiftUI.Color(red: 115 / 255, green: 122 / 255, blue: 134 / 255)
+        static let tertiaryText = SwiftUI.Color(red: 102 / 255, green: 109 / 255, blue: 121 / 255)
+        static let stateSurface = SwiftUI.Color(red: 236 / 255, green: 238 / 255, blue: 255 / 255)
         static let accent = SwiftUI.Color(red: 94 / 255, green: 92 / 255, blue: 230 / 255)
         static let success = SwiftUI.Color(red: 52 / 255, green: 199 / 255, blue: 89 / 255)
         static let destructive = SwiftUI.Color(red: 255 / 255, green: 59 / 255, blue: 48 / 255)
