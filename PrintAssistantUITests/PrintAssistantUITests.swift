@@ -34,7 +34,11 @@ final class PrintAssistantUITests: XCTestCase {
             tools.tap()
 
             let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
-            XCTAssertTrue(tool.waitForExistence(timeout: 10), "Missing tool: \(title)")
+            for _ in 0..<6 {
+                if tool.exists && tool.isHittable { break }
+                app.swipeUp()
+            }
+            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(title)")
             tool.tap()
             XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Failed to open: \(title)")
             attachScreenshot(of: app, named: "PDF-tool-\(title)")
