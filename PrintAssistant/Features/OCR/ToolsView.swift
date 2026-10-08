@@ -41,6 +41,16 @@ struct ToolsView: View {
 
             Section("PDF 工具") {
                 Button {
+                    appModel.push(.pdfPageSource)
+                } label: {
+                    toolRow(
+                        title: "页面管理",
+                        subtitle: "查看、重排或删除 PDF 页面",
+                        systemImage: "rectangle.3.group"
+                    )
+                }
+
+                Button {
                     appModel.push(.pdfSplitSource)
                 } label: {
                     toolRow(
@@ -61,10 +71,6 @@ struct ToolsView: View {
                 }
             }
 
-            Section("即将实现") {
-                Label("页面管理", systemImage: "rectangle.3.group")
-            }
-            .foregroundStyle(.secondary)
         }
         .navigationTitle("工具")
     }
