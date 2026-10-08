@@ -28,10 +28,19 @@ targets:
     scheme:
       testTargets:
         - PrintAssistantTests
+        - PrintAssistantUITests
   PrintAssistantTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: PrintAssistantTests
+    dependencies:
+      - target: PrintAssistant
+
+  PrintAssistantUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: PrintAssistantUITests
     dependencies:
       - target: PrintAssistant
