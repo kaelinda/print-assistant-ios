@@ -49,13 +49,28 @@ struct ToolsView: View {
                         systemImage: "rectangle.3.group"
                     )
                 }
+
+                Button {
+                    appModel.push(.pdfSplitSource)
+                } label: {
+                    toolRow(
+                        title: "拆分 PDF",
+                        subtitle: "按页码范围生成多个新文件",
+                        systemImage: "scissors"
+                    )
+                }
+
+                Button {
+                    appModel.push(.pdfMergeSelection)
+                } label: {
+                    toolRow(
+                        title: "合并 PDF",
+                        subtitle: "选择多个 PDF，调整顺序后生成新文件",
+                        systemImage: "doc.on.doc"
+                    )
+                }
             }
 
-            Section("即将实现") {
-                Label("合并 PDF", systemImage: "doc.on.doc")
-                Label("拆分 PDF", systemImage: "scissors")
-            }
-            .foregroundStyle(.secondary)
         }
         .navigationTitle("工具")
     }

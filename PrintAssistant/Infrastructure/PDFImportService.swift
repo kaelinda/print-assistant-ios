@@ -36,7 +36,7 @@ struct PDFImportService: Sendable {
                     try FileManager.default.copyItem(at: source, to: destination)
                     try FileManager.default.setAttributes(
                         [.protectionKey: FileProtectionType.complete],
-                        ofItemAtPath: destination.path()
+                        ofItemAtPath: destination.path
                     )
                     staged.append(.init(
                         url: destination,

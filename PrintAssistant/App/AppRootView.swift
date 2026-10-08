@@ -60,6 +60,20 @@ struct AppRootView: View {
                     IDCopyGeneratingView(draft: draft)
                 case .idCopySuccess(let id):
                     IDCopySuccessView(documentID: id)
+                case .pdfMergeSelection:
+                    PDFMergeSelectionView()
+                case .pdfMergeProcessing(let draft):
+                    PDFMergeProcessingView(draft: draft)
+                case .pdfMergeSuccess(let id):
+                    PDFMergeSuccessView(documentID: id)
+                case .pdfSplitSource:
+                    PDFSplitSourceView()
+                case .pdfSplitEditor(let draft):
+                    PDFSplitEditorView(draft: draft)
+                case .pdfSplitProcessing(let draft):
+                    PDFSplitProcessingView(draft: draft)
+                case .pdfSplitSuccess(let ids):
+                    PDFSplitSuccessView(documentIDs: ids)
                 case .pdfPageSource:
                     PDFPageSourceView()
                 case .pdfPageEditor(let draft):
@@ -85,22 +99,3 @@ struct AppRootView: View {
     }
 }
 
-private struct FilesView: View {
-    var body: some View {
-        ContentUnavailableView(
-            "文件",
-            systemImage: "folder",
-            description: Text("扫描件和生成的 PDF 会保存在这里。")
-        )
-    }
-}
-
-private struct SearchView: View {
-    var body: some View {
-        ContentUnavailableView(
-            "搜索",
-            systemImage: "magnifyingglass",
-            description: Text("文件名和 OCR 全文搜索将在索引层完成后接入。")
-        )
-    }
-}
