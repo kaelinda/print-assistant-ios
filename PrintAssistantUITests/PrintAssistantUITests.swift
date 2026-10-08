@@ -25,7 +25,7 @@ final class PrintAssistantUITests: XCTestCase {
 
     func testPDFToolEntryScreensRender() throws {
         let app = XCUIApplication()
-        for title in ["合并 PDF", "拆分 PDF", "页面管理"] {
+        for title in ["合并 PDF", "拆分 PDF", "页面管理", "压缩 PDF", "加密 PDF", "解除 PDF 密码"] {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
