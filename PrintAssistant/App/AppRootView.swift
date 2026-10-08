@@ -3,6 +3,15 @@ import SwiftUI
 struct AppRootView: View {
     @Environment(AppModel.self) private var appModel
 
+    private var selectedTabTitle: String {
+        switch appModel.selectedTab {
+        case .recent: "最近"
+        case .files: "文件"
+        case .tools: "工具"
+        case .search: "搜索"
+        }
+    }
+
     var body: some View {
         @Bindable var appModel = appModel
 
@@ -24,6 +33,7 @@ struct AppRootView: View {
                     .tag(AppModel.Tab.search)
                     .tabItem { Label("搜索", systemImage: "magnifyingglass") }
             }
+            .navigationTitle(selectedTabTitle)
             .navigationDestination(for: AppModel.Route.self) { route in
                 switch route {
                 case .scanner:

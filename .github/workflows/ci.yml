@@ -59,6 +59,7 @@ jobs:
             -project PrintAssistant.xcodeproj \
             -scheme PrintAssistant \
             -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -resultBundlePath "$RUNNER_TEMP/PrintAssistantTests.xcresult" \
             CODE_SIGNING_ALLOWED=NO \
             test 2>&1 | tee xcodebuild-test.log | xcpretty; then
             echo "::group::Raw test failure tail"
@@ -66,3 +67,21 @@ jobs:
             echo "::endgroup::"
             exit 1
           fi
+
+      - name: Export simulator screenshots
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/PrintAssistantTests.xcresult" ]; then
+            mkdir -p "$RUNNER_TEMP/simulator-screenshots"
+            xcrun xcresulttool export attachments \
+              --path "$RUNNER_TEMP/PrintAssistantTests.xcresult" \
+              --output-path "$RUNNER_TEMP/simulator-screenshots" || true
+          fi
+
+      - name: Upload simulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots
+          path: ${{ runner.temp }}/simulator-screenshots
+          if-no-files-found: ignore
