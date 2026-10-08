@@ -100,7 +100,17 @@ struct PDFProtectionService: Sendable {
                 protectedInput: sourceURL
             )
 
-            guard document.write(to: url) else {
+            // Rebuild the pages into a fresh document: PDFKit can retain
+            // encryption settings when an unlocked document is written directly.
+            let unprotected = PDFDocument()
+            for pageIndex in 0..<document.pageCount {
+                guard let original = document.page(at: pageIndex),
+                      let copy = original.copy() as? PDFPage else {
+                    throw ProtectionError.unableToWrite
+                }
+                unprotected.insert(copy, at: pageIndex)
+            }
+            guard unprotected.write(to: url) else {
                 throw ProtectionError.unableToWrite
             }
 
