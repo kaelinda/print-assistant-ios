@@ -23,6 +23,7 @@ targets:
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于选择需要转换、识别或排版的图片。
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: 用于将生成的文件或图片保存到照片。
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: NO
     scheme:
