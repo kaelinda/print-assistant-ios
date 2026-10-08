@@ -42,6 +42,12 @@ struct ToolsView: View {
             Section("PDF 工具") {
                 Button {
                     appModel.push(.pdfSplitSource)
+                } label: {
+                    toolRow(
+                        title: "拆分 PDF",
+                        subtitle: "按页码范围生成多个新文件",
+                        systemImage: "scissors"
+                    )
                 }
 
                 Button {
