@@ -174,8 +174,8 @@ struct PDFOperationService: Sendable {
         let root = try directory ?? defaultOutputDirectory()
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let url = root.appending(path: filename, directoryHint: .notDirectory)
-        let outputPath = url.standardizedFileURL.path()
-        let protectedPaths = Set(protectedInputs.map { $0.standardizedFileURL.path() })
+        let outputPath = url.standardizedFileURL.path
+        let protectedPaths = Set(protectedInputs.map { $0.standardizedFileURL.path })
         guard !protectedPaths.contains(outputPath) else {
             throw OperationError.outputConflictsWithSource
         }
@@ -196,7 +196,7 @@ struct PDFOperationService: Sendable {
         do {
             try FileManager.default.setAttributes(
                 [.protectionKey: FileProtectionType.complete],
-                ofItemAtPath: url.path()
+                ofItemAtPath: url.path
             )
         } catch {
             try? FileManager.default.removeItem(at: url)

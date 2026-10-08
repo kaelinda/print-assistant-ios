@@ -59,7 +59,7 @@ final class DocumentLibrary {
 
         do {
             try persist()
-            if FileManager.default.fileExists(atPath: record.localURL.path()) {
+            if FileManager.default.fileExists(atPath: record.localURL.path) {
                 try FileManager.default.removeItem(at: record.localURL)
             }
             persistenceError = nil
@@ -71,12 +71,12 @@ final class DocumentLibrary {
     }
 
     private func load() {
-        guard FileManager.default.fileExists(atPath: indexURL.path()) else { return }
+        guard FileManager.default.fileExists(atPath: indexURL.path) else { return }
 
         do {
             let data = try Data(contentsOf: indexURL)
             let decoded = try JSONDecoder().decode([DocumentRecord].self, from: data)
-            documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path()) }
+            documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path) }
             if documents.count != decoded.count {
                 try persist()
             }
