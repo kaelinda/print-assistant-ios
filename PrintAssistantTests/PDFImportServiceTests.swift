@@ -22,7 +22,7 @@ struct PDFImportServiceTests {
         #expect(item.isTemporary)
         #expect(item.displayName == "source.pdf")
         #expect(item.url != source)
-        #expect(FileManager.default.fileExists(atPath: item.url.path()))
+        #expect(FileManager.default.fileExists(atPath: item.url.path))
         #expect(try Data(contentsOf: source) == original)
         #expect(try Data(contentsOf: item.url) == original)
     }

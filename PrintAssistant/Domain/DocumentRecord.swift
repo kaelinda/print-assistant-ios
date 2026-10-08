@@ -20,6 +20,7 @@ struct DocumentRecord: Identifiable, Hashable, Codable {
     var localURL: URL
     var hasOCRText: Bool
     var isPasswordProtected: Bool
+    var searchableText: String?
 
     init(
         id: ID = UUID(),
@@ -31,7 +32,8 @@ struct DocumentRecord: Identifiable, Hashable, Codable {
         source: Source,
         localURL: URL,
         hasOCRText: Bool = false,
-        isPasswordProtected: Bool = false
+        isPasswordProtected: Bool = false,
+        searchableText: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -43,5 +45,6 @@ struct DocumentRecord: Identifiable, Hashable, Codable {
         self.localURL = localURL
         self.hasOCRText = hasOCRText
         self.isPasswordProtected = isPasswordProtected
+        self.searchableText = searchableText
     }
 }
