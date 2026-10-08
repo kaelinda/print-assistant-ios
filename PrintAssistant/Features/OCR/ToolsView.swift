@@ -41,6 +41,10 @@ struct ToolsView: View {
 
             Section("PDF 工具") {
                 Button {
+                    appModel.push(.pdfSplitSource)
+                }
+
+                Button {
                     appModel.push(.pdfMergeSelection)
                 } label: {
                     toolRow(
@@ -52,7 +56,6 @@ struct ToolsView: View {
             }
 
             Section("即将实现") {
-                Label("拆分 PDF", systemImage: "scissors")
                 Label("页面管理", systemImage: "rectangle.3.group")
             }
             .foregroundStyle(.secondary)

@@ -66,6 +66,14 @@ struct AppRootView: View {
                     PDFMergeProcessingView(draft: draft)
                 case .pdfMergeSuccess(let id):
                     PDFMergeSuccessView(documentID: id)
+                case .pdfSplitSource:
+                    PDFSplitSourceView()
+                case .pdfSplitEditor(let draft):
+                    PDFSplitEditorView(draft: draft)
+                case .pdfSplitProcessing(let draft):
+                    PDFSplitProcessingView(draft: draft)
+                case .pdfSplitSuccess(let ids):
+                    PDFSplitSuccessView(documentIDs: ids)
                 }
             }
         }

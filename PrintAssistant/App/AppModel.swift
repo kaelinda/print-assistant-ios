@@ -36,6 +36,11 @@ final class AppModel {
         case pdfMergeSelection
         case pdfMergeProcessing(PDFMergeDraft)
         case pdfMergeSuccess(DocumentRecord.ID)
+
+        case pdfSplitSource
+        case pdfSplitEditor(PDFSplitDraft)
+        case pdfSplitProcessing(PDFSplitDraft)
+        case pdfSplitSuccess([DocumentRecord.ID])
     }
 
     var selectedTab: Tab = .recent
