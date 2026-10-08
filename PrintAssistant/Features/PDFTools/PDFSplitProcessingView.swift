@@ -85,7 +85,7 @@ struct PDFSplitProcessingView: View {
                 for id in ids {
                     try? appModel.library.delete(id: id)
                 }
-                for url in urls where FileManager.default.fileExists(atPath: url.path()) {
+                for url in urls where FileManager.default.fileExists(atPath: url.path) {
                     try? FileManager.default.removeItem(at: url)
                 }
                 throw error
