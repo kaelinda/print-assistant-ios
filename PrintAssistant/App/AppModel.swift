@@ -46,6 +46,8 @@ final class AppModel {
         case pdfPageEditor(PDFPageManagementDraft)
         case pdfPageProcessing(PDFPageManagementDraft)
         case pdfPageSuccess(DocumentRecord.ID)
+
+        case pdfUtility(PDFUtilityMode)
     }
 
     var selectedTab: Tab = .recent

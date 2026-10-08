@@ -69,6 +69,35 @@ struct ToolsView: View {
                         systemImage: "doc.on.doc"
                     )
                 }
+                Button {
+                    appModel.push(.pdfUtility(.compress))
+                } label: {
+                    toolRow(
+                        title: "压缩 PDF",
+                        subtitle: "优化文件体积，保留可编辑文字",
+                        systemImage: "arrow.down.doc"
+                    )
+                }
+
+                Button {
+                    appModel.push(.pdfUtility(.protect))
+                } label: {
+                    toolRow(
+                        title: "加密 PDF",
+                        subtitle: "设置打开密码，保护文件内容",
+                        systemImage: "lock.doc"
+                    )
+                }
+
+                Button {
+                    appModel.push(.pdfUtility(.unlock))
+                } label: {
+                    toolRow(
+                        title: "解除 PDF 密码",
+                        subtitle: "使用正确密码生成未加密副本",
+                        systemImage: "lock.open"
+                    )
+                }
             }
 
         }
