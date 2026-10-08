@@ -92,6 +92,8 @@ struct AppRootView: View {
                     PDFPageProcessingView(draft: draft)
                 case .pdfPageSuccess(let id):
                     PDFPageSuccessView(documentID: id)
+                case .pdfUtility(let mode):
+                    PDFUtilityView(mode: mode)
                 }
             }
         }
