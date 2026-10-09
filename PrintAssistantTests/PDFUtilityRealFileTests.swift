@@ -59,7 +59,9 @@ struct PDFUtilityRealFileTests {
     func compressionNeverOverwritesSourcesOrKeepsNonSmallerOutputs() async throws {
         let fixture = try Fixture()
         defer { fixture.cleanup() }
-        let source = try fixture.makePDF("待压缩.pdf")
+        let fixtureURL = try fixture.makePDF("待压缩.pdf")
+        let source = fixture.output.appending(path: "待压缩.pdf")
+        try FileManager.default.moveItem(at: fixtureURL, to: source)
         let original = try Data(contentsOf: source)
         let compressor = PDFCompressionService(outputDirectory: fixture.output)
 
