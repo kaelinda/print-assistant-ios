@@ -40,7 +40,7 @@ struct ToolsView: View {
                 ])
 
                 toolSection(title: "打印与证件", rows: [
-                    ToolDefinition(title: "证件工具", subtitle: "身份证复印、证件照排版", systemImage: "person.text.rectangle", tint: DesignTokens.Color.warning) { appModel.push(.idCopyCapture(.init(), .front)) },
+                    ToolDefinition(title: "证件工具", subtitle: "身份证复印、证件照排版", systemImage: "person.text.rectangle", tint: DesignTokens.Color.warning) { appModel.push(.idToolHub) },
                     ToolDefinition(title: "图片转 PDF", subtitle: "图片自动适配纸张", systemImage: "photo.on.rectangle.angled", tint: DesignTokens.Color.accent) { appModel.push(.photoPDFSelection) },
                     ToolDefinition(title: "证件照排版", subtitle: "1 寸照片排版到 A4", systemImage: "person.crop.rectangle", tint: DesignTokens.Color.warning) { appModel.push(.photoIDSource) },
                     ToolDefinition(title: "打印模板", subtitle: "保存常用纸张与边距", systemImage: "printer", tint: DesignTokens.Color.success) { appModel.push(.templateCenter) }

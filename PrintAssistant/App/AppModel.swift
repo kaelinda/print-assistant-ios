@@ -27,6 +27,7 @@ final class AppModel {
         case photoPDFGenerating(PhotoPDFDraft)
         case photoPDFSuccess(DocumentRecord.ID)
 
+        case idToolHub
         case idCopyCapture(IDCopyDraft, IDCopyDraft.Side)
         case idCopyConfirm(IDCopyDraft, IDCopyDraft.Side, Data)
         case idCopyLayout(IDCopyDraft)

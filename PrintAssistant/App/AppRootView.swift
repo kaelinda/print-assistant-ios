@@ -42,6 +42,8 @@ struct AppRootView: View {
                     PhotoPDFGeneratingView(draft: draft)
                 case .photoPDFSuccess(let id):
                     PhotoPDFSuccessView(documentID: id)
+                case .idToolHub:
+                    IDToolHubView()
                 case .idCopyCapture(let draft, let side):
                     IDCopyCaptureView(draft: draft, side: side)
                 case .idCopyConfirm(let draft, let side, let data):

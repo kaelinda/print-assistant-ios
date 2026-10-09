@@ -71,6 +71,17 @@ final class PrintAssistantUITests: XCTestCase {
                 "Missing tool: \(toolTitle)"
             )
             entry.tap()
+            if toolTitle == "身份证复印" {
+                XCTAssertTrue(
+                    app.navigationBars["证件工具"].waitForExistence(timeout: 10),
+                    "Failed to open: 证件工具"
+                )
+                let idCopy = app.buttons.matching(
+                    NSPredicate(format: "label CONTAINS %@", "身份证复印")
+                ).firstMatch
+                XCTAssertTrue(idCopy.waitForExistence(timeout: 5) && idCopy.isHittable)
+                idCopy.tap()
+            }
             XCTAssertTrue(
                 app.navigationBars[navigationTitle].waitForExistence(timeout: 10),
                 "Failed to open: \(toolTitle)"
