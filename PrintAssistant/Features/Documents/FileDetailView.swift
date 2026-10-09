@@ -64,6 +64,14 @@ struct FileDetailView: View {
                         }
                         .buttonStyle(.bordered)
                         .disabled(isPreparingOCR)
+
+                        Button {
+                            appModel.push(.imageExport(document.id))
+                        } label: {
+                            Label("导出为图片", systemImage: "photo.on.rectangle")
+                                .frame(maxWidth: .infinity, minHeight: 50)
+                        }
+                        .buttonStyle(.bordered)
                     }
                     .padding(DesignTokens.Spacing.lg)
                 }

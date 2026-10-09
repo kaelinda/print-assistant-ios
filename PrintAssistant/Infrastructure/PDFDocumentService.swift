@@ -102,6 +102,70 @@ struct PDFDocumentService: Sendable {
         }.value
     }
 
+    func makePhotoIDPDF(from draft: PhotoIDDraft, filename: String) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            guard let image = UIImage(data: draft.data) else {
+                throw PDFError.unableToDecodeImage
+            }
+
+            let pageSize = PhysicalPrintGeometry.a4Size
+            let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize))
+            let url = try Self.outputURL(filename: filename)
+            let cardSize = CGSize(
+                width: Self.points(millimeters: 25),
+                height: Self.points(millimeters: 35)
+            )
+            let gap = Self.points(millimeters: 6)
+            let columns = 2
+            let rows = 3
+            let totalWidth = cardSize.width * CGFloat(columns) + gap
+            let totalHeight = cardSize.height * CGFloat(rows) + gap * CGFloat(rows - 1)
+            let origin = CGPoint(
+                x: (pageSize.width - totalWidth) / 2,
+                y: (pageSize.height - totalHeight) / 2
+            )
+
+            do {
+                try renderer.writePDF(to: url) { context in
+                    context.beginPage()
+                    UIColor.white.setFill()
+                    context.cgContext.fill(CGRect(origin: .zero, size: pageSize))
+
+                    for row in 0..<rows {
+                        for column in 0..<columns {
+                            let rect = CGRect(
+                                x: origin.x + CGFloat(column) * (cardSize.width + gap),
+                                y: origin.y + CGFloat(row) * (cardSize.height + gap),
+                                width: cardSize.width,
+                                height: cardSize.height
+                            )
+                            let background: UIColor = switch draft.background {
+                            case .white: .white
+                            case .blue: UIColor(red: 0.34, green: 0.58, blue: 0.88, alpha: 1)
+                            case .red: UIColor(red: 0.84, green: 0.22, blue: 0.24, alpha: 1)
+                            }
+                            background.setFill()
+                            context.cgContext.fill(rect)
+                            context.cgContext.saveGState()
+                            context.cgContext.clip(to: rect)
+                            let drawRect = Self.aspectFillRect(image.size, in: rect)
+                            image.draw(in: drawRect)
+                            context.cgContext.restoreGState()
+                        }
+                    }
+                }
+            } catch {
+                throw PDFError.unableToWrite
+            }
+
+            guard let verification = PDFDocument(url: url), verification.pageCount == 1 else {
+                try? FileManager.default.removeItem(at: url)
+                throw PDFError.unableToWrite
+            }
+            return url
+        }.value
+    }
+
     private static func renderIDCopyPDF(from draft: IDCopyDraft, filename: String) throws -> URL {
         guard
             let frontData = draft.frontData,
@@ -204,6 +268,22 @@ struct PDFDocumentService: Sendable {
     private static func outputURL(filename: String) throws -> URL {
         let directory = try documentsDirectory()
         return directory.appending(path: filename, directoryHint: .notDirectory)
+    }
+
+    private static func points(millimeters: CGFloat) -> CGFloat {
+        millimeters / 25.4 * 72
+    }
+
+    private static func aspectFillRect(_ imageSize: CGSize, in rect: CGRect) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return rect }
+        let scale = max(rect.width / imageSize.width, rect.height / imageSize.height)
+        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGRect(
+            x: rect.midX - size.width / 2,
+            y: rect.midY - size.height / 2,
+            width: size.width,
+            height: size.height
+        )
     }
 
     private static func documentsDirectory() throws -> URL {

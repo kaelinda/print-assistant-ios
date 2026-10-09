@@ -74,6 +74,48 @@ struct AppRootView: View {
                     PDFPageProcessingView(draft: draft)
                 case .pdfPageSuccess(let id):
                     PDFPageSuccessView(documentID: id)
+                case .templateCenter:
+                    TemplateCenterView()
+                case .templateEditor(let template):
+                    TemplateEditorView(template: template)
+                case .templateApply(let template):
+                    TemplateApplyView(template: template)
+                case .batchSelection:
+                    BatchSelectionView()
+                case .batchProcessing(let ids):
+                    BatchProcessingView(documentIDs: ids)
+                case .batchSuccess(let ids):
+                    BatchSuccessView(documentIDs: ids)
+                case .pdfCompressionSource:
+                    PDFCompressionSourceView()
+                case .pdfCompressionProcessing(let source):
+                    PDFCompressionProcessingView(source: source)
+                case .pdfCompressionSuccess(let id):
+                    PDFCompressionSuccessView(documentID: id)
+                case .pdfProtectionSource:
+                    PDFProtectionSourceView()
+                case .pdfProtection(let source):
+                    PDFProtectionView(source: source)
+                case .pdfProtectionSuccess(let id):
+                    PDFProtectionSuccessView(documentID: id)
+                case .photoIDSource:
+                    PhotoIDSourceView()
+                case .photoIDCrop(let draft):
+                    PhotoIDCropView(draft: draft)
+                case .photoIDGenerating(let draft):
+                    PhotoIDGeneratingView(draft: draft)
+                case .photoIDSuccess(let id):
+                    PhotoIDSuccessView(documentID: id)
+                case .imageExport(let id):
+                    ImageExportView(documentID: id)
+                case .settings:
+                    SettingsView()
+                case .privacy:
+                    PrivacyView()
+                case .privacyPolicy:
+                    PrivacyPolicyView()
+                case .feedback:
+                    FeedbackView()
                 }
             }
         }

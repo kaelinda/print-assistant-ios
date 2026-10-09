@@ -46,6 +46,28 @@ final class AppModel {
         case pdfPageEditor(PDFPageManagementDraft)
         case pdfPageProcessing(PDFPageManagementDraft)
         case pdfPageSuccess(DocumentRecord.ID)
+
+        case templateCenter
+        case templateEditor(PrintTemplate)
+        case templateApply(PrintTemplate)
+        case batchSelection
+        case batchProcessing([DocumentRecord.ID])
+        case batchSuccess([DocumentRecord.ID])
+        case pdfCompressionSource
+        case pdfCompressionProcessing(PDFSourceItem)
+        case pdfCompressionSuccess(DocumentRecord.ID)
+        case pdfProtectionSource
+        case pdfProtection(PDFSourceItem)
+        case pdfProtectionSuccess(DocumentRecord.ID)
+        case photoIDSource
+        case photoIDCrop(PhotoIDDraft)
+        case photoIDGenerating(PhotoIDDraft)
+        case photoIDSuccess(DocumentRecord.ID)
+        case imageExport(DocumentRecord.ID)
+        case settings
+        case privacy
+        case privacyPolicy
+        case feedback
     }
 
     var selectedTab: Tab = .recent
