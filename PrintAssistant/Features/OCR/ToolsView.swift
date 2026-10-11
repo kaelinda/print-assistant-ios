@@ -27,6 +27,7 @@ struct ToolsView: View {
                             .foregroundStyle(DesignTokens.Color.primaryText)
                     }
                     .accessibilityLabel("更多工具")
+                    .accessibilityIdentifier("open-settings")
                 }
                 .frame(minHeight: 52)
 
