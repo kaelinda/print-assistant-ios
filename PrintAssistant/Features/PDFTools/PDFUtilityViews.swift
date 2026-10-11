@@ -30,17 +30,17 @@ struct PDFCompressionSourceView: View {
         }
         .navigationTitle("压缩 PDF")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
-                do {
-                    let sources = try await appModel.pdfImportService.stage(urls: [try result.get()])
-                    guard let source = sources.first else { return }
-                    appModel.push(.pdfCompressionProcessing(source))
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                guard let source = sources.first else { return }
+                appModel.push(.pdfCompressionProcessing(source))
             }
-        }
+        )
         .alert("无法读取 PDF", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(errorMessage ?? "未知错误") }
@@ -175,17 +175,17 @@ struct PDFProtectionSourceView: View {
         }
         .navigationTitle("保护 PDF")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
-                do {
-                    let sources = try await appModel.pdfImportService.stage(urls: [try result.get()])
-                    guard let source = sources.first else { return }
-                    appModel.push(.pdfProtection(source))
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                guard let source = sources.first else { return }
+                appModel.push(.pdfProtection(source))
             }
-        }
+        )
         .alert("无法读取 PDF", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(errorMessage ?? "未知错误") }

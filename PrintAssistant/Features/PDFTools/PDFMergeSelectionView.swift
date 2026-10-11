@@ -101,13 +101,21 @@ struct PDFMergeSelectionView: View {
                 EditButton()
             }
         }
-        .fileImporter(
+        .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
-            allowsMultipleSelection: true
-        ) { result in
-            stage(result)
-        }
+            allowsMultipleSelection: true,
+            importer: appModel.pdfImportService,
+            onStart: { isStaging = true },
+            onFailure: { message in
+                isStaging = false
+                errorMessage = message
+            },
+            onFiles: { imported in
+                isStaging = false
+                selected.append(contentsOf: imported)
+            }
+        )
         .onDisappear {
             if !isNavigatingForward {
                 appModel.pdfImportService.cleanup(selected)
@@ -145,18 +153,4 @@ struct PDFMergeSelectionView: View {
         selected.removeAll { $0.id == item.id }
     }
 
-    private func stage(_ result: Result<[URL], Error>) {
-        Task {
-            do {
-                let urls = try result.get()
-                isStaging = true
-                let imported = try await appModel.pdfImportService.stage(urls: urls)
-                selected.append(contentsOf: imported)
-                isStaging = false
-            } catch {
-                isStaging = false
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
 }

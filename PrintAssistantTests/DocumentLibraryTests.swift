@@ -117,6 +117,80 @@ struct DocumentLibraryTests {
     }
 
     @Test
+    func storesRelativePathsAndSurvivesLibraryRootMove() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "sample.pdf", source: .files)
+        let index = fixture.root.appending(path: "PrintAssistant/documents.json", directoryHint: .notDirectory)
+        let json = try String(contentsOf: index, encoding: .utf8)
+
+        #expect(json.contains("Documents/"))
+        #expect(!json.contains(fixture.root.path))
+
+        let movedRoot = FileManager.default.temporaryDirectory
+            .appending(path: "PrintAssistantMoved-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: movedRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: movedRoot) }
+        try FileManager.default.copyItem(
+            at: fixture.root.appending(path: "PrintAssistant", directoryHint: .isDirectory),
+            to: movedRoot.appending(path: "PrintAssistant", directoryHint: .isDirectory)
+        )
+
+        let reloaded = DocumentLibrary(baseURL: movedRoot)
+        let stored = try #require(reloaded.document(id: record.id))
+        #expect(stored.name == "sample.pdf")
+        #expect(FileManager.default.fileExists(atPath: stored.localURL.path))
+        #expect(stored.localURL.path.hasPrefix(movedRoot.path))
+    }
+
+    @Test
+    func corruptIndexIsBackedUpAndNotReplacedWithEmptyLibrary() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "PrintAssistantCorrupt-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = DocumentLibrary(baseURL: root)
+        let index = root.appending(path: "PrintAssistant/documents.json", directoryHint: .notDirectory)
+        let corrupt = Data("not-json".utf8)
+        try corrupt.write(to: index)
+
+        let broken = DocumentLibrary(baseURL: root)
+        #expect(broken.documents.isEmpty)
+        #expect(broken.persistenceError != nil)
+        #expect(!FileManager.default.fileExists(atPath: index.path))
+
+        let directory = index.deletingLastPathComponent()
+        let backups = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        let backup = try #require(backups.first { $0.lastPathComponent.hasPrefix("documents.json.corrupt-") })
+        #expect(try Data(contentsOf: backup) == corrupt)
+        #expect(!FileManager.default.fileExists(atPath: index.path))
+    }
+
+    @Test
+    func clearSearchableTextIsAtomicAndKeepsModifiedDate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "notes.pdf", source: .scan)
+        try fixture.library.updateSearchableText(id: record.id, text: "发票 128")
+        let before = try #require(fixture.library.document(id: record.id)).modifiedAt
+
+        try fixture.library.clearSearchableText()
+
+        let cleared = try #require(fixture.library.document(id: record.id))
+        #expect(cleared.searchableText == nil)
+        #expect(cleared.hasOCRText == false)
+        #expect(cleared.modifiedAt == before)
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        let stored = try #require(reloaded.document(id: record.id))
+        #expect(stored.searchableText == nil)
+        #expect(stored.hasOCRText == false)
+        #expect(stored.modifiedAt == before)
+    }
+
+    @Test
     func unicodeFilenameSurvivesRelaunch() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "PrintAssistantUnicode-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -171,7 +245,7 @@ struct DocumentLibraryTests {
                 localURL: file
             )
             try library.add(record)
-            return record
+            return try #require(library.document(id: record.id))
         }
 
         func cleanup() {

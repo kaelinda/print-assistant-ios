@@ -207,12 +207,6 @@ struct PDFOperationService: Sendable {
     }
 
     private static func defaultOutputDirectory() throws -> URL {
-        let base = try FileManager.default.url(
-            for: .documentDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        return base.appending(path: "Documents", directoryHint: .isDirectory)
+        LibraryPaths.filesDirectory()
     }
 }

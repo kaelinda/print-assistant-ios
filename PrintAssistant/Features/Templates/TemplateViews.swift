@@ -201,11 +201,18 @@ struct TemplateApplyView: View {
         .background(DesignTokens.Color.canvas)
         .navigationTitle("套用模板")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
                 do {
-                    let source = try await appModel.pdfImportService.stage(urls: [try result.get()]).first
-                    guard let source, let pdf = PDFDocument(url: source.url), pdf.pageCount > 0 else {
+                    guard let source = sources.first,
+                          let pdf = PDFDocument(url: source.url),
+                          pdf.pageCount > 0 else {
+                        appModel.pdfImportService.cleanup(sources)
                         throw PDFImportService.ImportError.unableToStage
                     }
                     let values = try source.url.resourceValues(forKeys: [.fileSizeKey])
@@ -217,12 +224,14 @@ struct TemplateApplyView: View {
                         localURL: source.url
                     )
                     try appModel.library.add(record)
-                    apply(to: record)
+                    if let stored = appModel.library.document(id: record.id) {
+                        apply(to: stored)
+                    }
                 } catch {
                     errorMessage = error.localizedDescription
                 }
             }
-        }
+        )
         .alert("无法导入文件", isPresented: .init(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }

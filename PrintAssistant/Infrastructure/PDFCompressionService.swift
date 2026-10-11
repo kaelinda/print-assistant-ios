@@ -52,18 +52,7 @@ struct PDFCompressionService: Sendable {
                 throw CompressionError.lockedPDF
             }
 
-            let root: URL
-            if let directory {
-                root = directory
-            } else {
-                let base = try FileManager.default.url(
-                    for: .documentDirectory,
-                    in: .userDomainMask,
-                    appropriateFor: nil,
-                    create: true
-                )
-                root = base.appending(path: "Documents", directoryHint: .isDirectory)
-            }
+            let root = directory ?? LibraryPaths.filesDirectory()
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
 
             let output = root.appending(path: filename, directoryHint: .notDirectory)

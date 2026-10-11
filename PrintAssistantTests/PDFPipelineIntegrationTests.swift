@@ -25,8 +25,9 @@ struct PDFPipelineIntegrationTests {
         let firstBytes = try Data(contentsOf: first)
         let secondBytes = try Data(contentsOf: second)
 
-        let importer = PDFImportService()
-        let staged = try await importer.stage(urls: [first, second])
+        let imports = root.appending(path: "imports", directoryHint: .isDirectory)
+        let importer = PDFImportService(filesDirectory: imports)
+        let staged = try await importer.copyIntoLibrary(urls: [first, second])
         defer { importer.cleanup(staged) }
         #expect(staged.map(\.displayName) == ["资料一.pdf", "合同二.pdf"])
         #expect(staged.allSatisfy { $0.isTemporary })
@@ -89,7 +90,10 @@ struct PDFPipelineIntegrationTests {
         try library.add(record)
 
         let relaunched = DocumentLibrary(baseURL: root)
-        #expect(relaunched.document(id: record.id)?.localURL == unlockedURL)
+        let stored = try #require(relaunched.document(id: record.id))
+        #expect(stored.name == "最终文件.pdf")
+        #expect(LibraryPaths.isInsideLibrary(stored.localURL, root: LibraryPaths.applicationRoot(baseURL: root)))
+        #expect(try Data(contentsOf: stored.localURL) == Data(contentsOf: unlockedURL))
         #expect(relaunched.visibleDocuments(query: "最终").map(\.id) == [record.id])
 
         importer.cleanup(staged)

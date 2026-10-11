@@ -48,20 +48,25 @@ struct BatchSelectionView: View {
         }
         .navigationTitle("批量处理")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(
+        .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
-            allowsMultipleSelection: true
-        ) { result in
-            Task {
+            allowsMultipleSelection: true,
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
                 do {
-                    let sources = try await appModel.pdfImportService.stage(urls: try result.get())
                     for source in sources {
                         guard let values = try? source.url.resourceValues(forKeys: [.fileSizeKey]),
-                              let pageCount = PDFDocument(url: source.url)?.pageCount else { continue }
+                              let pdf = PDFDocument(url: source.url),
+                              pdf.pageCount > 0 else {
+                            appModel.pdfImportService.cleanup([source])
+                            continue
+                        }
                         let record = DocumentRecord(
                             name: source.displayName,
-                            pageCount: pageCount,
+                            pageCount: pdf.pageCount,
                             byteCount: Int64(values.fileSize ?? 0),
                             source: .files,
                             localURL: source.url
@@ -72,7 +77,7 @@ struct BatchSelectionView: View {
                     errorMessage = error.localizedDescription
                 }
             }
-        }
+        )
         .alert("无法添加文件", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(errorMessage ?? "未知错误") }
