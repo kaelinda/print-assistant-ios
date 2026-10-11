@@ -107,7 +107,10 @@ struct OCRSourceView: View {
         do {
             access = try SecurityScopedAccess(result: result)
         } catch {
-            importError = error.localizedDescription
+            let message = error.localizedDescription
+            Task { @MainActor in
+                importError = message
+            }
             return
         }
 
