@@ -82,10 +82,10 @@ struct AppRootView: View {
                     TemplateApplyView(template: template)
                 case .batchSelection:
                     BatchSelectionView()
-                case .batchProcessing(let ids):
-                    BatchProcessingView(documentIDs: ids)
-                case .batchSuccess(let ids):
-                    BatchSuccessView(documentIDs: ids)
+                case .batchProcessing(let job):
+                    BatchProcessingView(job: job)
+                case .batchSuccess(let job):
+                    BatchSuccessView(job: job)
                 case .pdfCompressionSource:
                     PDFCompressionSourceView()
                 case .pdfCompressionProcessing(let source):

@@ -242,6 +242,7 @@ struct TemplateApplyView: View {
     }
 
     private func apply(to document: DocumentRecord) {
+        appModel.activePrintTemplate = template
         appModel.transientMessage = "已套用模板：\(template.name)"
         appModel.push(.document(document.id))
     }
