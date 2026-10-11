@@ -14,7 +14,7 @@ struct PhotoIDSourceView: View {
                 .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
             Text("证件照来源").font(.title2.bold())
-            Text("选择一张照片，裁剪成 1 寸证件照并排版到 A4。")
+            Text("选择一张照片，按 1 寸或 2 寸裁剪后排版到 A4。")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             PhotosPicker(selection: $photoItem, matching: .images) {
@@ -81,15 +81,15 @@ struct PhotoIDCropView: View {
         Form {
             Section("裁剪预览") {
                 if let image = UIImage(data: draft.data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 260)
-                        .clipped()
-                        .overlay { Rectangle().stroke(DesignTokens.Color.accent, lineWidth: 2) }
+                    PhotoIDCropCanvas(
+                        image: image,
+                        spec: PhotoIDGeometry.spec(for: draft.sizeName),
+                        offset: $draft.cropOffset
+                    )
+                    .frame(height: 280)
+                    .accessibilityLabel("拖动调整裁剪")
                 }
-                Text("保持头部居中，背景尽量均匀。")
+                Text("拖动照片调整位置。裁剪框按所选寸照比例取景。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -139,7 +139,7 @@ struct PhotoIDGeneratingView: View {
             } else {
                 ProgressView().controlSize(.large)
                 Text("正在排版证件照").font(.title2.bold())
-                Text("A4 · 6 张 · \(draft.background.displayName)").foregroundStyle(.secondary)
+                Text("A4 · \(PhotoIDGeometry.spec(for: draft.sizeName).sheetCount) 张 · \(draft.background.displayName)").foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -166,7 +166,8 @@ struct PhotoIDGeneratingView: View {
                 localURL: url
             )
             try appModel.library.add(record)
-            appModel.replaceTop(with: .photoIDSuccess(record.id))
+            let sheetCount = PhotoIDGeometry.spec(for: draft.sizeName).sheetCount
+            appModel.replaceTop(with: .photoIDSuccess(record.id, sheetCount: sheetCount))
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -176,6 +177,7 @@ struct PhotoIDGeneratingView: View {
 struct PhotoIDSuccessView: View {
     @Environment(AppModel.self) private var appModel
     let documentID: DocumentRecord.ID
+    let sheetCount: Int
 
     var body: some View {
         if let document = appModel.library.document(id: documentID) {
@@ -185,7 +187,7 @@ struct PhotoIDSuccessView: View {
                     .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("证件照已生成").font(.title2.bold())
-                Text("A4 · 6 张 · 文件已保存到本机").foregroundStyle(.secondary)
+                Text("A4 · \(sheetCount) 张 · 文件已保存到本机").foregroundStyle(.secondary)
                 PrimaryActionButton(title: "预览 / 分享", state: .enabled) {
                     appModel.push(.pdfPreview(document.id))
                 }
@@ -201,5 +203,78 @@ struct PhotoIDSuccessView: View {
         } else {
             ContentUnavailableView("文件不存在", systemImage: "doc.badge.exclamationmark")
         }
+    }
+}
+
+private struct PhotoIDCropCanvas: View {
+    let image: UIImage
+    let spec: PhotoIDGeometry.Spec
+    @Binding var offset: CGSize
+    @State private var gestureOrigin: CGSize = .zero
+
+    var body: some View {
+        GeometryReader { geo in
+            let frame = frameSize(in: geo.size, aspect: spec.cardSize)
+            let displayed = displayedSize(imageSize: image.size, frame: frame)
+            let limit = CGSize(
+                width: max(0, (displayed.width - frame.width) / 2),
+                height: max(0, (displayed.height - frame.height) / 2)
+            )
+            Image(uiImage: image)
+                .resizable()
+                .frame(width: displayed.width, height: displayed.height)
+                .offset(visualOffset(offset, limit: limit))
+                .frame(width: frame.width, height: frame.height)
+                .clipped()
+                .overlay { Rectangle().stroke(DesignTokens.Color.accent, lineWidth: 2) }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    DragGesture()
+                        .onChanged { value in
+                            offset = clampedOffset(start: gestureOrigin, translation: value.translation, limit: limit)
+                        }
+                        .onEnded { _ in
+                            gestureOrigin = offset
+                        }
+                )
+                .onAppear { gestureOrigin = offset }
+        }
+    }
+
+    private func frameSize(in container: CGSize, aspect: CGSize) -> CGSize {
+        guard aspect.width > 0, aspect.height > 0, container.width > 0, container.height > 0 else {
+            return container
+        }
+        let target = aspect.width / aspect.height
+        let available = container.width / container.height
+        if available > target {
+            return CGSize(width: container.height * target, height: container.height)
+        }
+        return CGSize(width: container.width, height: container.width / target)
+    }
+
+    private func displayedSize(imageSize: CGSize, frame: CGSize) -> CGSize {
+        guard imageSize.width > 0, imageSize.height > 0, frame.width > 0, frame.height > 0 else {
+            return frame
+        }
+        let scale = max(frame.width / imageSize.width, frame.height / imageSize.height)
+        return CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+    }
+
+    private func visualOffset(_ offset: CGSize, limit: CGSize) -> CGSize {
+        CGSize(
+            width: -min(1, max(-1, offset.width)) * limit.width,
+            height: -min(1, max(-1, offset.height)) * limit.height
+        )
+    }
+
+    private func clampedOffset(start: CGSize, translation: CGSize, limit: CGSize) -> CGSize {
+        let dx = limit.width > 0 ? -translation.width / limit.width : 0
+        let dy = limit.height > 0 ? -translation.height / limit.height : 0
+        return CGSize(
+            width: min(1, max(-1, start.width + dx)),
+            height: min(1, max(-1, start.height + dy))
+        )
     }
 }

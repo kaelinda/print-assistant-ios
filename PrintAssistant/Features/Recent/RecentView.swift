@@ -1,7 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct RecentView: View {
     @Environment(AppModel.self) private var appModel
+    @State private var isImporting = false
+    @State private var errorMessage: String?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -61,6 +64,50 @@ struct RecentView: View {
         }
         .background(DesignTokens.Color.canvas)
         .toolbar(.hidden, for: .navigationBar)
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            allowsMultipleSelection: true,
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                importPickedFiles(sources)
+            }
+        )
+        .alert("无法导入文件", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("好", role: .cancel) {}
+        } message: { Text(errorMessage ?? "未知错误") }
+    }
+
+    private func importPickedFiles(_ sources: [PDFSourceItem]) {
+        do {
+            var added = 0
+            for source in sources {
+                guard let inspection = PDFFileInspection.inspect(url: source.url) else {
+                    appModel.pdfImportService.cleanup([source])
+                    continue
+                }
+                let values = try source.url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: source.displayName,
+                    pageCount: inspection.pageCount,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .files,
+                    localURL: source.url,
+                    isPasswordProtected: inspection.isLocked
+                )
+                try appModel.library.add(record)
+                added += 1
+            }
+            if added == 0 {
+                errorMessage = "没有可导入的 PDF。"
+            } else {
+                appModel.transientMessage = added == 1 ? "已导入 1 个文件" : "已导入 \(added) 个文件"
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private var emptyState: some View {
@@ -92,7 +139,7 @@ struct RecentView: View {
                 .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
 
             Button("导入文件") {
-                appModel.transientMessage = "导入文件功能即将支持"
+                isImporting = true
             }
             .font(.subheadline.weight(.medium))
             .foregroundStyle(DesignTokens.Color.primaryText)

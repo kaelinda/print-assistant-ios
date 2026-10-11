@@ -108,17 +108,16 @@ struct PDFDocumentService: Sendable {
                 throw PDFError.unableToDecodeImage
             }
 
+            let spec = PhotoIDGeometry.spec(for: draft.sizeName)
+            let portrait = Self.croppedPhotoID(image, cardSize: spec.cardSize, offset: draft.cropOffset)
             let pageSize = PhysicalPrintGeometry.a4Size
             let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize))
             let url = try Self.outputURL(filename: filename)
-            let cardSize = CGSize(
-                width: Self.points(millimeters: 25),
-                height: Self.points(millimeters: 35)
-            )
+            let cardSize = spec.cardSize
             let gap = Self.points(millimeters: 6)
-            let columns = 2
-            let rows = 3
-            let totalWidth = cardSize.width * CGFloat(columns) + gap
+            let columns = spec.columns
+            let rows = spec.rows
+            let totalWidth = cardSize.width * CGFloat(columns) + gap * CGFloat(columns - 1)
             let totalHeight = cardSize.height * CGFloat(rows) + gap * CGFloat(rows - 1)
             let origin = CGPoint(
                 x: (pageSize.width - totalWidth) / 2,
@@ -148,8 +147,8 @@ struct PDFDocumentService: Sendable {
                             context.cgContext.fill(rect)
                             context.cgContext.saveGState()
                             context.cgContext.clip(to: rect)
-                            let drawRect = Self.aspectFillRect(image.size, in: rect)
-                            image.draw(in: drawRect)
+                            let drawRect = Self.aspectFillRect(portrait.size, in: rect)
+                            portrait.draw(in: drawRect)
                             context.cgContext.restoreGState()
                         }
                     }
@@ -268,6 +267,18 @@ struct PDFDocumentService: Sendable {
     private static func outputURL(filename: String) throws -> URL {
         let directory = try documentsDirectory()
         return directory.appending(path: filename, directoryHint: .notDirectory)
+    }
+
+    private static func croppedPhotoID(_ image: UIImage, cardSize: CGSize, offset: CGSize) -> UIImage {
+        let crop = PhotoIDGeometry.cropRect(imageSize: image.size, aspect: cardSize, offset: offset)
+        guard crop.width > 1, crop.height > 1 else { return image }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = image.scale
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: crop.size, format: format)
+        return renderer.image { _ in
+            image.draw(at: CGPoint(x: -crop.origin.x, y: -crop.origin.y))
+        }
     }
 
     private static func points(millimeters: CGFloat) -> CGFloat {

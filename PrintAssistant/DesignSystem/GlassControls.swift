@@ -69,6 +69,7 @@ struct GlassCard<Content: View>: View {
 struct GlassSearchField: View {
     @Binding var text: String
     let prompt: String
+    var onSubmit: () -> Void = {}
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
@@ -79,6 +80,8 @@ struct GlassSearchField: View {
                 .font(.subheadline)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .submitLabel(.search)
+                .onSubmit(onSubmit)
             if !text.isEmpty {
                 Button {
                     text = ""
@@ -213,7 +216,9 @@ struct GlassTabBar: View {
             .background(.ultraThinMaterial, in: Circle())
             .overlay { Circle().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
             .shadow(color: DesignTokens.Color.shadow, radius: 5, y: 3)
+            .accessibilityIdentifier(identifier(for: .search))
             .accessibilityLabel("搜索")
+            .accessibilityAddTraits(appModel.selectedTab == .search ? .isSelected : [])
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 68)
@@ -249,7 +254,18 @@ struct GlassTabBar: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier(for: tab))
         .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func identifier(for tab: AppModel.Tab) -> String {
+        switch tab {
+        case .recent: "tab-recent"
+        case .files: "tab-files"
+        case .tools: "tab-tools"
+        case .search: "tab-search"
+        }
     }
 }
 

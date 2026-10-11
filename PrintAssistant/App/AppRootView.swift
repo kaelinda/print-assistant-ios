@@ -106,8 +106,8 @@ struct AppRootView: View {
                     PhotoIDCropView(draft: draft)
                 case .photoIDGenerating(let draft):
                     PhotoIDGeneratingView(draft: draft)
-                case .photoIDSuccess(let id):
-                    PhotoIDSuccessView(documentID: id)
+                case .photoIDSuccess(let id, let sheetCount):
+                    PhotoIDSuccessView(documentID: id, sheetCount: sheetCount)
                 case .imageExport(let id):
                     ImageExportView(documentID: id)
                 case .settings:
@@ -130,7 +130,12 @@ struct AppRootView: View {
                     .background(.regularMaterial, in: Capsule())
                     .padding(.bottom, 72)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .accessibilityIdentifier("transient-message")
             }
+        }
+        .onChange(of: appModel.transientMessage) { _, message in
+            guard let message, !message.isEmpty else { return }
+            AccessibilityNotification.Announcement(message).post()
         }
     }
 
