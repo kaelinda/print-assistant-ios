@@ -23,12 +23,26 @@ struct PDFPreviewView: View {
                     .ignoresSafeArea(edges: .bottom)
                     .navigationTitle("打印预览")
                     .navigationBarTitleDisplayMode(.inline)
+                    .safeAreaInset(edge: .bottom) {
+                        if let template = appModel.activePrintTemplate {
+                            Text("打印模板：\(template.name) · \(template.paper) · \(template.scale) · \(template.copies) 份")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(.regularMaterial)
+                        }
+                    }
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             ShareLink(item: document.localURL) { Image(systemName: "square.and.arrow.up") }
                                 .accessibilityLabel("分享")
                             Button {
-                                PrintService.present(url: document.localURL, jobName: document.name)
+                                PrintService.present(
+                                    url: document.localURL,
+                                    jobName: document.name,
+                                    template: appModel.activePrintTemplate
+                                )
                             } label: {
                                 Image(systemName: "printer")
                             }

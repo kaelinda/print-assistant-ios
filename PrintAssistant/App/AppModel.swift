@@ -51,8 +51,8 @@ final class AppModel {
         case templateEditor(PrintTemplate)
         case templateApply(PrintTemplate)
         case batchSelection
-        case batchProcessing([DocumentRecord.ID])
-        case batchSuccess([DocumentRecord.ID])
+        case batchProcessing(BatchJob)
+        case batchSuccess(BatchJob)
         case pdfCompressionSource
         case pdfCompressionProcessing(PDFSourceItem)
         case pdfCompressionSuccess(DocumentRecord.ID)
@@ -85,6 +85,7 @@ final class AppModel {
     var path: [Route] = []
     var isWorking = false
     var transientMessage: String?
+    var activePrintTemplate: PrintTemplate?
 
     /// Runs one merge, compress, or OCR job at a time.
     func runExclusive<T>(_ operation: () async throws -> T) async throws -> T {

@@ -39,7 +39,12 @@ struct BatchSelectionView: View {
                         title: "开始批量处理",
                         state: selected.isEmpty ? .disabled : .enabled
                     ) {
-                        appModel.push(.batchProcessing(Array(selected)))
+                        let items = selected.compactMap { id -> BatchJob.Item? in
+                            guard let document = appModel.library.document(id: id) else { return nil }
+                            return BatchJob.Item(id: id, name: document.name)
+                        }
+                        guard !items.isEmpty else { return }
+                        appModel.push(.batchProcessing(BatchJob(items: items)))
                     }
                 }
                 .padding(16)
@@ -86,9 +91,14 @@ struct BatchSelectionView: View {
 
 struct BatchProcessingView: View {
     @Environment(AppModel.self) private var appModel
-    let documentIDs: [DocumentRecord.ID]
+    @State private var job: BatchJob
+    @State private var cancelRequested = false
     @State private var errorMessage: String?
     @State private var attempt = 0
+
+    init(job: BatchJob) {
+        _job = State(initialValue: job)
+    }
 
     var body: some View {
         VStack(spacing: 18) {
@@ -101,12 +111,24 @@ struct BatchProcessingView: View {
                 Text(errorMessage).multilineTextAlignment(.center).foregroundStyle(.secondary)
                 PrimaryActionButton(title: "重试", state: .enabled) {
                     self.errorMessage = nil
+                    cancelRequested = false
                     attempt += 1
                 }
             } else {
-                ProgressView().controlSize(.large)
-                Text("正在批量处理").font(.title2.bold())
-                Text("已选择 \(documentIDs.count) 个文件").foregroundStyle(.secondary)
+                ProgressView(value: job.progress)
+                    .padding(.horizontal, 32)
+                Text("正在逐个压缩").font(.title2.bold())
+                Text("\(job.finishedCount) / \(job.items.count)")
+                    .foregroundStyle(.secondary)
+                if let current = job.items.first(where: { if case .running = $0.state { return true }; return false }) {
+                    Text(current.name)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                }
+                Button("取消") { cancelRequested = true }
+                    .buttonStyle(.bordered)
+                    .disabled(cancelRequested)
             }
             Spacer()
         }
@@ -123,73 +145,133 @@ struct BatchProcessingView: View {
     @MainActor
     private func process() async {
         do {
-            let records = documentIDs.compactMap { appModel.library.document(id: $0) }
-            guard let first = records.first else { throw PDFOperationService.OperationError.insufficientInputs }
-            let urls = records.map(\.localURL)
-            let outputURL: URL
-            if urls.count >= 2 {
-                outputURL = try await appModel.pdfOperationService.merge(
-                    urls: urls,
-                    filename: "批量处理-\(Int(Date.now.timeIntervalSince1970)).pdf"
-                )
-            } else {
-                outputURL = first.localURL
+            let finished = try await appModel.runExclusive {
+                try await compressEachFile()
             }
-            if urls.count == 1 {
-                appModel.replaceTop(with: .batchSuccess(documentIDs))
-                return
-            }
-            let values = try outputURL.resourceValues(forKeys: [.fileSizeKey])
-            let record = DocumentRecord(
-                name: outputURL.lastPathComponent,
-                pageCount: PDFDocument(url: outputURL)?.pageCount ?? 1,
-                byteCount: Int64(values.fileSize ?? 0),
-                source: .generated,
-                localURL: outputURL
-            )
-            try appModel.library.add(record)
-            appModel.replaceTop(with: .batchSuccess([record.id]))
+            appModel.replaceTop(with: .batchSuccess(finished))
+        } catch is CancellationError {
+            var partial = job
+            partial.cancelRemaining()
+            appModel.replaceTop(with: .batchSuccess(partial))
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    @MainActor
+    private func compressEachFile() async throws -> BatchJob {
+        for index in job.items.indices {
+            try Task.checkCancellation()
+            if cancelRequested {
+                job.cancelRemaining()
+                return job
+            }
+
+            let sourceID = job.items[index].id
+            job.markRunning(sourceID)
+
+            guard let document = appModel.library.document(id: sourceID) else {
+                job.markFailed(sourceID, message: "文件不存在或已被移动。")
+                continue
+            }
+            if document.isPasswordProtected {
+                job.markFailed(sourceID, message: "文件已加密，需要先解锁。")
+                continue
+            }
+
+            do {
+                let filename = "批量压缩-\(UUID().uuidString).pdf"
+                let result = try await PDFCompressionService().compress(
+                    sourceURL: document.localURL,
+                    filename: filename
+                )
+                let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: "\(document.name)-压缩.pdf",
+                    pageCount: PDFDocument(url: result.url)?.pageCount ?? document.pageCount,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .generated,
+                    localURL: result.url
+                )
+                try appModel.library.add(record)
+                job.markSucceeded(sourceID, result: record.id)
+            } catch is CancellationError {
+                job.cancelRemaining()
+                throw CancellationError()
+            } catch {
+                job.markFailed(sourceID, message: error.localizedDescription)
+            }
+        }
+        return job
     }
 }
 
 struct BatchSuccessView: View {
     @Environment(AppModel.self) private var appModel
-    let documentIDs: [DocumentRecord.ID]
+    let job: BatchJob
 
     var body: some View {
-        VStack(spacing: 18) {
-            Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 62))
-                .foregroundStyle(DesignTokens.Color.success)
-            Text("批量处理完成").font(.title2.bold())
-            Text("已生成 \(documentIDs.count) 个结果文件")
-                .foregroundStyle(.secondary)
-            ForEach(documentIDs, id: \.self) { id in
-                if let document = appModel.library.document(id: id) {
-                    Button {
-                        appModel.push(.pdfPreview(document.id))
-                    } label: {
-                        HStack {
-                            Text(document.name)
-                            Spacer()
-                            Image(systemName: "chevron.right")
+        ScrollView {
+            VStack(spacing: 18) {
+                Image(systemName: job.succeededIDs.isEmpty ? "exclamationmark.circle" : "checkmark.circle.fill")
+                    .font(.system(size: 62))
+                    .foregroundStyle(job.succeededIDs.isEmpty ? DesignTokens.Color.warning : DesignTokens.Color.success)
+                Text(job.isCancelled ? "批量处理已取消" : "批量处理完成")
+                    .font(.title2.bold())
+                Text("成功 \(job.succeededIDs.count) 个 · 失败 \(failedCount) 个 · 取消 \(cancelledCount) 个")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                ForEach(job.items) { item in
+                    switch item.state {
+                    case .succeeded(let id):
+                        if let document = appModel.library.document(id: id) {
+                            Button {
+                                appModel.push(.pdfPreview(document.id))
+                            } label: {
+                                HStack {
+                                    Image(systemName: "checkmark.circle")
+                                        .foregroundStyle(DesignTokens.Color.success)
+                                    Text(document.name).lineLimit(1)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                }
+                            }
+                            .buttonStyle(.bordered)
                         }
+                    case .failed(let message):
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.name).font(.headline)
+                            Text(message)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    case .cancelled:
+                        Text("\(item.name) 已取消")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundStyle(.secondary)
+                    case .pending, .running:
+                        EmptyView()
                     }
-                    .buttonStyle(.bordered)
+                }
+
+                Button("返回文件") {
+                    appModel.selectedTab = .files
+                    appModel.popToRoot()
                 }
             }
-            Button("返回文件") {
-                appModel.selectedTab = .files
-                appModel.popToRoot()
-            }
-            Spacer()
+            .padding(24)
         }
-        .padding(24)
         .navigationTitle("完成")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var failedCount: Int {
+        job.items.filter { if case .failed = $0.state { return true }; return false }.count
+    }
+
+    private var cancelledCount: Int {
+        job.items.filter { if case .cancelled = $0.state { return true }; return false }.count
     }
 }
