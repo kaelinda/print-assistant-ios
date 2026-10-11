@@ -8,24 +8,24 @@ struct RecentView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 HStack {
                     Text("最近")
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(DesignTokens.Color.primaryText)
 
                     Spacer()
 
                     Button { appModel.push(.scanner) } label: {
                         Image(systemName: "doc.viewfinder")
-                            .font(.system(size: 22, weight: .medium))
+                            .font(.title2)
                             .foregroundStyle(DesignTokens.Color.primaryText)
                             .frame(width: 46, height: 46)
                     }
                     .buttonStyle(.plain)
                     .background(.ultraThinMaterial, in: Circle())
-                    .overlay { Circle().stroke(.white.opacity(0.78), lineWidth: 1) }
+                    .overlay { Circle().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                     .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
                     .accessibilityLabel("扫描文档")
                 }
-                .frame(height: 52)
+                .frame(minHeight: 52)
 
                 Button {
                     appModel.selectedTab = .search
@@ -33,10 +33,10 @@ struct RecentView: View {
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.xs) {
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 20, weight: .medium))
+                            .font(.title3)
                             .foregroundStyle(DesignTokens.Color.primaryText)
                         Text("搜索文档与扫描文字")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundStyle(DesignTokens.Color.secondaryText)
                         Spacer()
                     }
@@ -45,7 +45,7 @@ struct RecentView: View {
                 }
                 .buttonStyle(.plain)
                 .background(.ultraThinMaterial, in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(0.78), lineWidth: 1) }
+                .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                 .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
                 .accessibilityLabel("搜索文档与扫描文字")
 
@@ -66,18 +66,18 @@ struct RecentView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "doc.text")
-                .font(.system(size: 40, weight: .medium))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .frame(width: 88, height: 88)
                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 28))
 
             Text("还没有最近项目")
-                .font(.system(size: 20, weight: .medium))
+                .font(.title3)
                 .foregroundStyle(DesignTokens.Color.primaryText)
                 .frame(maxWidth: .infinity)
 
             Text("扫描、导入或把图片整理成 PDF 后，会显示在这里。")
-                .font(.system(size: 12))
+                .font(.footnote)
                 .foregroundStyle(DesignTokens.Color.secondaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -85,20 +85,20 @@ struct RecentView: View {
             Color.clear.frame(height: 4)
 
             Button("扫描文档") { appModel.push(.scanner) }
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white)
                 .frame(width: 216, height: 52)
                 .background(DesignTokens.Color.accent.opacity(0.95), in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(0.32), lineWidth: 1) }
+                .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
 
             Button("导入文件") {
                 appModel.transientMessage = "导入文件功能即将支持"
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(.subheadline.weight(.medium))
             .foregroundStyle(DesignTokens.Color.primaryText)
             .frame(width: 216, height: 52)
             .background(.ultraThinMaterial, in: Capsule())
-            .overlay { Capsule().stroke(.white.opacity(0.72), lineWidth: 1) }
+            .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
             .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.08), radius: 9, y: 6)
         }
         .frame(maxWidth: .infinity)

@@ -94,7 +94,7 @@ struct FeedbackView: View {
             TextEditor(text: $message)
                 .frame(minHeight: 180)
                 .padding(8)
-                .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 16))
+                .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 16))
             PrimaryActionButton(title: sent ? "已发送" : "发送反馈", state: message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || sent ? .disabled : .enabled) {
                 sent = true
                 appModel.transientMessage = "感谢你的反馈"

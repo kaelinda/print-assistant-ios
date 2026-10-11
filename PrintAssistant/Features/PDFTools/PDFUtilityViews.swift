@@ -71,7 +71,7 @@ struct PDFCompressionProcessingView: View {
             Spacer()
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                 Text("压缩失败").font(.title2.bold())
                 Text(errorMessage).multilineTextAlignment(.center).foregroundStyle(.secondary)
@@ -131,7 +131,7 @@ struct PDFCompressionSuccessView: View {
             VStack(spacing: 18) {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("PDF 已压缩").font(.title2.bold())
                 Text(document.name).font(.headline)
@@ -277,7 +277,7 @@ struct PDFProtectionSuccessView: View {
             VStack(spacing: 18) {
                 Spacer()
                 Image(systemName: "lock.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("PDF 已保护").font(.title2.bold())
                 Text(document.name).font(.headline)

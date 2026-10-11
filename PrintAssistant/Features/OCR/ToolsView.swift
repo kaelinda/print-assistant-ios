@@ -16,19 +16,19 @@ struct ToolsView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text("工具")
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(DesignTokens.Color.primaryText)
                     Spacer()
                     GlassIconButton {
                         appModel.push(.settings)
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundStyle(DesignTokens.Color.primaryText)
                     }
                     .accessibilityLabel("更多工具")
                 }
-                .frame(height: 52)
+                .frame(minHeight: 52)
 
                 toolSection(title: "文档", rows: [
                     ToolDefinition(title: "PDF 工具箱", subtitle: "合并、拆分、提取页面", systemImage: "doc.on.doc", tint: DesignTokens.Color.accent) { appModel.push(.pdfPageSource) },

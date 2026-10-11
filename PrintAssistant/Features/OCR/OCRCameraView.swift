@@ -13,7 +13,7 @@ struct OCRCameraView: View {
             Spacer()
 
             Image(systemName: "text.viewfinder")
-                .font(.system(size: 58))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .accessibilityHidden(true)
 

@@ -15,7 +15,7 @@ struct IDCopyCaptureView: View {
             Spacer()
 
             Image(systemName: side == .front ? "person.text.rectangle" : "creditcard")
-                .font(.system(size: 58))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .accessibilityHidden(true)
 
