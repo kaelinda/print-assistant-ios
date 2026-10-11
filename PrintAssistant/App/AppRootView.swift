@@ -98,6 +98,8 @@ struct AppRootView: View {
                     PDFProtectionView(source: source)
                 case .pdfProtectionSuccess(let id):
                     PDFProtectionSuccessView(documentID: id)
+                case .pdfUtility(let mode):
+                    PDFUtilityView(mode: mode)
                 case .photoIDSource:
                     PhotoIDSourceView()
                 case .photoIDCrop(let draft):

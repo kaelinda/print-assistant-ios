@@ -59,6 +59,7 @@ final class AppModel {
         case pdfProtectionSource
         case pdfProtection(PDFSourceItem)
         case pdfProtectionSuccess(DocumentRecord.ID)
+        case pdfUtility(PDFUtilityMode)
         case photoIDSource
         case photoIDCrop(PhotoIDDraft)
         case photoIDGenerating(PhotoIDDraft)

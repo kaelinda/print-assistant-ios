@@ -45,33 +45,44 @@ struct FileDetailView: View {
                             }
                         }
 
-                        PrimaryActionButton(title: "预览 / 打印", state: .enabled) {
-                            appModel.push(.pdfPreview(document.id))
-                        }
-
-                        Button {
-                            prepareOCR(for: document)
-                        } label: {
-                            HStack {
-                                if isPreparingOCR {
-                                    ProgressView()
-                                } else {
-                                    Image(systemName: "text.viewfinder")
-                                }
-                                Text(document.hasOCRText ? "重新识别文字" : "识别文字")
+                        if document.isPasswordProtected {
+                            Label("文件已加密，解锁后才能预览、识别或打印。", systemImage: "lock.doc")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Button("解除 PDF 密码") {
+                                appModel.push(.pdfUtility(.unlock))
                             }
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(isPreparingOCR)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                        } else {
+                            PrimaryActionButton(title: "预览 / 打印", state: .enabled) {
+                                appModel.push(.pdfPreview(document.id))
+                            }
 
-                        Button {
-                            appModel.push(.imageExport(document.id))
-                        } label: {
-                            Label("导出为图片", systemImage: "photo.on.rectangle")
+                            Button {
+                                prepareOCR(for: document)
+                            } label: {
+                                HStack {
+                                    if isPreparingOCR {
+                                        ProgressView()
+                                    } else {
+                                        Image(systemName: "text.viewfinder")
+                                    }
+                                    Text(document.hasOCRText ? "重新识别文字" : "识别文字")
+                                }
                                 .frame(maxWidth: .infinity, minHeight: 50)
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(isPreparingOCR)
+
+                            Button {
+                                appModel.push(.imageExport(document.id))
+                            } label: {
+                                Label("导出为图片", systemImage: "photo.on.rectangle")
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                            }
+                            .buttonStyle(.bordered)
                         }
-                        .buttonStyle(.bordered)
                     }
                     .padding(DesignTokens.Spacing.lg)
                 }
