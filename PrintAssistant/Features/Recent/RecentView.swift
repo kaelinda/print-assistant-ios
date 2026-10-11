@@ -77,7 +77,7 @@ struct RecentView: View {
         )
         .alert("无法导入文件", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 
     private func importPickedFiles(_ sources: [PDFSourceItem]) {
@@ -101,9 +101,9 @@ struct RecentView: View {
                 added += 1
             }
             if added == 0 {
-                errorMessage = "没有可导入的 PDF。"
+                errorMessage = String(localized: "没有可导入的 PDF。")
             } else {
-                appModel.transientMessage = added == 1 ? "已导入 1 个文件" : "已导入 \(added) 个文件"
+                appModel.transientMessage = String(localized: "已导入 \(added) 个文件")
             }
         } catch {
             errorMessage = error.localizedDescription

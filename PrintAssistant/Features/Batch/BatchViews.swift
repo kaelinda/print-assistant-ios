@@ -85,7 +85,7 @@ struct BatchSelectionView: View {
         )
         .alert("无法添加文件", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 }
 
@@ -171,23 +171,23 @@ struct BatchProcessingView: View {
             job.markRunning(sourceID)
 
             guard let document = appModel.library.document(id: sourceID) else {
-                job.markFailed(sourceID, message: "文件不存在或已被移动。")
+                job.markFailed(sourceID, message: String(localized: "文件不存在或已被移动。"))
                 continue
             }
             if document.isPasswordProtected {
-                job.markFailed(sourceID, message: "文件已加密，需要先解锁。")
+                job.markFailed(sourceID, message: String(localized: "文件已加密，需要先解锁。"))
                 continue
             }
 
             do {
-                let filename = "批量压缩-\(UUID().uuidString).pdf"
+                let filename = "\(String(localized: "批量压缩"))-\(UUID().uuidString).pdf"
                 let result = try await PDFCompressionService().compress(
                     sourceURL: document.localURL,
                     filename: filename
                 )
                 let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
                 let record = DocumentRecord(
-                    name: "\(document.name)-压缩.pdf",
+                    name: "\(document.name)-\(String(localized: "压缩")).pdf",
                     pageCount: PDFDocument(url: result.url)?.pageCount ?? document.pageCount,
                     byteCount: Int64(values.fileSize ?? 0),
                     source: .generated,
@@ -216,9 +216,13 @@ struct BatchSuccessView: View {
                 Image(systemName: job.succeededIDs.isEmpty ? "exclamationmark.circle" : "checkmark.circle.fill")
                     .font(.largeTitle)
                     .foregroundStyle(job.succeededIDs.isEmpty ? DesignTokens.Color.warning : DesignTokens.Color.success)
-                Text(job.isCancelled ? "批量处理已取消" : "批量处理完成")
+                Text(verbatim: job.isCancelled ? String(localized: "批量处理已取消") : String(localized: "批量处理完成"))
                     .font(.title2.bold())
-                Text("成功 \(job.succeededIDs.count) 个 · 失败 \(failedCount) 个 · 取消 \(cancelledCount) 个")
+                Text(verbatim: AppCopy.batchSummary(
+                    succeeded: job.succeededIDs.count,
+                    failed: failedCount,
+                    cancelled: cancelledCount
+                ))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 

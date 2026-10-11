@@ -68,7 +68,7 @@ struct GlassCard<Content: View>: View {
 
 struct GlassSearchField: View {
     @Binding var text: String
-    let prompt: String
+    let prompt: LocalizedStringKey
     var onSubmit: () -> Void = {}
 
     var body: some View {
@@ -101,13 +101,26 @@ struct GlassSearchField: View {
 }
 
 struct GlassChip: View {
-    let title: String
+    private let title: Text
     let isSelected: Bool
     let action: () -> Void
 
+    init(title: LocalizedStringKey, isSelected: Bool, action: @escaping () -> Void) {
+        self.title = Text(title)
+        self.isSelected = isSelected
+        self.action = action
+    }
+
+    /// User-entered text, or a string that is already localized.
+    init(verbatim title: String, isSelected: Bool, action: @escaping () -> Void) {
+        self.title = Text(verbatim: title)
+        self.isSelected = isSelected
+        self.action = action
+    }
+
     var body: some View {
         Button(action: action) {
-            Text(title)
+            title
                 .font(.footnote.weight(isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? DesignTokens.Color.primaryText : DesignTokens.Color.secondaryText)
                 .padding(.horizontal, 16)
@@ -121,8 +134,8 @@ struct GlassChip: View {
 }
 
 struct GlassActionRow: View {
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
     let systemImage: String
     let tint: SwiftUI.Color
     let action: () -> Void
@@ -161,10 +174,10 @@ struct GlassActionRow: View {
 }
 
 struct GlassSectionHeader<Trailing: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder var trailing: () -> Trailing
 
-    init(_ title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
+    init(_ title: LocalizedStringKey, @ViewBuilder trailing: @escaping () -> Trailing) {
         self.title = title
         self.trailing = trailing
     }
@@ -181,7 +194,7 @@ struct GlassSectionHeader<Trailing: View>: View {
 }
 
 extension GlassSectionHeader where Trailing == EmptyView {
-    init(_ title: String) {
+    init(_ title: LocalizedStringKey) {
         self.init(title) { EmptyView() }
     }
 }
@@ -227,7 +240,7 @@ struct GlassTabBar: View {
     }
 
     @ViewBuilder
-    private func tab(_ tab: AppModel.Tab, title: String, systemImage: String) -> some View {
+    private func tab(_ tab: AppModel.Tab, title: LocalizedStringKey, systemImage: String) -> some View {
         let isSelected = appModel.selectedTab == tab
         Button {
             appModel.selectedTab = tab
@@ -278,7 +291,7 @@ struct PrimaryActionButton: View {
         case processing
     }
 
-    let title: String
+    let title: LocalizedStringKey
     let state: State
     let action: () -> Void
 
@@ -289,7 +302,7 @@ struct PrimaryActionButton: View {
                     ProgressView()
                         .tint(.white)
                 }
-                Text(state == .processing ? "处理中" : title)
+                Text(state == .processing ? LocalizedStringKey(stringLiteral: "处理中") : title)
                     .font(.headline)
             }
             .frame(maxWidth: .infinity, minHeight: 52)

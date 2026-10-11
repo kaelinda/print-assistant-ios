@@ -15,7 +15,7 @@ struct FilesView: View {
                 filterRow
 
                 if let error = appModel.library.persistenceError, appModel.library.documents.isEmpty {
-                    emptyCard(title: "无法读取文件库", message: error, icon: "exclamationmark.triangle")
+                    emptyCard(title: "无法读取文件库", message: LocalizedStringKey(stringLiteral: error), icon: "exclamationmark.triangle")
                 } else if visibleDocuments.isEmpty {
                     emptyCard(
                         title: source == .all ? "还没有文件" : "没有符合条件的文件",
@@ -69,7 +69,7 @@ struct FilesView: View {
     private var groupedDocumentList: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(groups, id: \.title) { group in
-                GlassSectionHeader(group.title)
+                GlassSectionHeader(LocalizedStringKey(stringLiteral: group.title))
                     .padding(.top, 4)
 
                 GlassCard(cornerRadius: 20) {
@@ -114,7 +114,7 @@ struct FilesView: View {
         }
     }
 
-    private func emptyCard(title: String, message: String, icon: String) -> some View {
+    private func emptyCard(title: LocalizedStringKey, message: LocalizedStringKey, icon: String) -> some View {
         GlassCard(cornerRadius: 22) {
             VStack(spacing: 10) {
                 Image(systemName: icon)

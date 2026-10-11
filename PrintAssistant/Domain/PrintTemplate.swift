@@ -9,10 +9,10 @@ struct PrintTemplate: Identifiable, Codable, Hashable, Sendable {
 
         var displayName: String {
             switch self {
-            case .all: "全部"
-            case .id: "证件"
-            case .photo: "照片"
-            case .document: "文档"
+            case .all: String(localized: "全部")
+            case .id: String(localized: "证件")
+            case .photo: String(localized: "照片")
+            case .document: String(localized: "文档")
             }
         }
     }

@@ -77,7 +77,7 @@ struct OCRSourceView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(importError ?? "未知错误")
+            Text(importError ?? String(localized: "未知错误"))
         }
     }
 
@@ -95,7 +95,7 @@ struct OCRSourceView: View {
             }
             appModel.push(.ocrProcessing(.init(
                 imageData: data,
-                displayName: "照片"
+                displayName: String(localized: "照片")
             )))
         } catch {
             importError = error.localizedDescription

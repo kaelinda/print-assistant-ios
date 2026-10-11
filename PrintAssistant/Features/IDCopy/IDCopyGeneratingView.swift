@@ -51,7 +51,7 @@ struct IDCopyGeneratingView: View {
     @MainActor
     private func generate() async {
         do {
-            let filename = "身份证复印件-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "身份证复印件"))
             let url = try await appModel.pdfService.makeIDCopyPDF(from: draft, filename: filename)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(

@@ -1,7 +1,7 @@
 import Foundation
 
 enum FeedbackMail {
-    static let subject = "打印助手反馈"
+    static var subject: String { String(localized: "打印助手反馈") }
 
     static func mailtoURL(body: String) -> URL? {
         let encodedSubject = percentEncode(subject)

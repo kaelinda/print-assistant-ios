@@ -13,6 +13,8 @@ struct PhotoExportErrorTests {
     func deniedPhotoAccessExplainsTheMissingPermission() {
         #expect(PhotoExportError.authorizationFailure(for: .denied) == .notAuthorized)
         #expect(PhotoExportError.authorizationFailure(for: .restricted) == .notAuthorized)
-        #expect(PhotoExportError.notAuthorized.errorDescription?.contains("权限") == true)
+        let description = PhotoExportError.notAuthorized.errorDescription ?? ""
+        let mentionsPermission = description.contains("权限") || description.localizedCaseInsensitiveContains("permission")
+        #expect(mentionsPermission)
     }
 }

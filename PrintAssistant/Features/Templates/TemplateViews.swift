@@ -23,7 +23,7 @@ struct TemplateCenterView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(PrintTemplate.Category.allCases, id: \.self) { item in
-                            GlassChip(title: item.displayName, isSelected: category == item) {
+                            GlassChip(verbatim: item.displayName, isSelected: category == item) {
                                 category = item
                             }
                         }
@@ -35,15 +35,15 @@ struct TemplateCenterView: View {
                         appModel.push(.templateApply(template))
                     } label: {
                         HStack(spacing: 14) {
-                            Text(template.category == .id ? "ID" : template.category == .photo ? "1IN" : "DOC")
+                            Text(verbatim: AppCopy.templateBadge(template.category))
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(DesignTokens.Color.accent)
                                 .frame(width: 46, height: 46)
                                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 13))
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(template.name)
+                                Text(verbatim: AppCopy.templateTitle(template.name))
                                     .font(.subheadline.weight(.semibold))
-                                Text(template.subtitle)
+                                Text(verbatim: AppCopy.templateSubtitle(template.subtitle))
                                     .font(.footnote)
                                     .foregroundStyle(DesignTokens.Color.secondaryText)
                             }
@@ -101,14 +101,18 @@ struct TemplateEditorView: View {
             Section("打印参数") {
                 TextField("纸张", text: $template.paper)
                 TextField("缩放", text: $template.scale)
-                Stepper("边距 \(template.marginMillimeters) mm", value: $template.marginMillimeters, in: 0...50)
-                Stepper("份数 \(template.copies)", value: $template.copies, in: 1...99)
+                Stepper(value: $template.marginMillimeters, in: 0...50) {
+                    Text(verbatim: AppCopy.margin(template.marginMillimeters))
+                }
+                Stepper(value: $template.copies, in: 1...99) {
+                    Text(verbatim: AppCopy.copiesLabel(template.copies))
+                }
             }
             Section {
                 PrimaryActionButton(title: "保存模板", state: template.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .disabled : .enabled) {
                     TemplateStore.upsert(template)
                     appModel.popToRoot()
-                    appModel.transientMessage = "模板已保存"
+                    appModel.transientMessage = String(localized: "模板已保存")
                 }
             }
             .listRowInsets(.init())
@@ -132,9 +136,14 @@ struct TemplateApplyView: View {
                     Image(systemName: "checklist")
                         .font(.largeTitle)
                         .foregroundStyle(DesignTokens.Color.accent)
-                    Text(template.name)
+                    Text(verbatim: AppCopy.templateTitle(template.name))
                         .font(.title2.bold())
-                    Text("\(template.paper) · \(template.scale) · \(template.marginMillimeters) mm 边距 · \(template.copies) 份")
+                    Text(verbatim: AppCopy.templateSummary(
+                        paper: template.paper,
+                        scale: template.scale,
+                        marginMillimeters: template.marginMillimeters,
+                        copies: template.copies
+                    ))
                         .foregroundStyle(DesignTokens.Color.secondaryText)
                         .multilineTextAlignment(.center)
                 }
@@ -237,13 +246,13 @@ struct TemplateApplyView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 
     private func apply(to document: DocumentRecord) {
         appModel.activePrintTemplate = template
-        appModel.transientMessage = "已套用模板：\(template.name)"
+        appModel.transientMessage = String(localized: "已套用模板：\(AppCopy.templateTitle(template.name))")
         appModel.push(.document(document.id))
     }
 }

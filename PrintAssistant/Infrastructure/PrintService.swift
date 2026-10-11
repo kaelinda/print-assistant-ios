@@ -41,7 +41,7 @@ enum PrintTemplateRenderer {
         let directory = outputDirectory ?? spoolDirectory()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appending(
-            path: "打印-\(UUID().uuidString).pdf",
+            path: "\(String(localized: "打印"))-\(UUID().uuidString).pdf",
             directoryHint: .notDirectory
         )
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: layout.paperSize))

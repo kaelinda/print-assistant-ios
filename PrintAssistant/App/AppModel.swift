@@ -76,7 +76,7 @@ final class AppModel {
 
         var errorDescription: String? {
             switch self {
-            case .busy: "已有处理任务正在进行，请稍候。"
+            case .busy: String(localized: "已有处理任务正在进行，请稍候。")
             }
         }
     }

@@ -36,7 +36,7 @@ struct SettingsView: View {
             Button("清除索引", role: .destructive) {
                 do {
                     try appModel.library.clearSearchableText()
-                    appModel.transientMessage = "文字索引已清除"
+                    appModel.transientMessage = String(localized: "文字索引已清除")
                 } catch {
                     appModel.transientMessage = error.localizedDescription
                 }
@@ -116,16 +116,16 @@ struct FeedbackView: View {
 
     private func sendFeedback() {
         guard let url = FeedbackMail.mailtoURL(body: trimmedMessage) else {
-            appModel.transientMessage = "无法打开邮件"
+            appModel.transientMessage = String(localized: "无法打开邮件")
             return
         }
         openURL(url) { accepted in
             Task { @MainActor in
                 if accepted {
                     sent = true
-                    appModel.transientMessage = "已打开邮件，请在邮件中发送反馈"
+                    appModel.transientMessage = String(localized: "已打开邮件，请在邮件中发送反馈")
                 } else {
-                    appModel.transientMessage = "没有可用的邮件应用"
+                    appModel.transientMessage = String(localized: "没有可用的邮件应用")
                 }
             }
         }

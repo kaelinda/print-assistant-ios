@@ -37,7 +37,7 @@ struct IDCopyLayoutView: View {
                 .frame(height: 520)
 
                 VStack(spacing: DesignTokens.Spacing.xs) {
-                    Text("85.60 × 53.98 mm")
+                    Text(verbatim: AppCopy.id1CardSize)
                         .font(.headline.monospacedDigit())
                     Text("PDF 中的证件外框按 ID‑1 标准尺寸生成。最终纸面尺寸仍需打印时选择 100% / 实际大小，并以真机打印验证为准。")
                         .font(.footnote)
@@ -59,7 +59,7 @@ struct IDCopyLayoutView: View {
     }
 
     @ViewBuilder
-    private func cardPreview(data: Data?, label: String) -> some View {
+    private func cardPreview(data: Data?, label: LocalizedStringKey) -> some View {
         if let data, let image = UIImage(data: data) {
             Image(uiImage: image)
                 .resizable()

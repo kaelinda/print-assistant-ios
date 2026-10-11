@@ -25,7 +25,12 @@ struct PDFPreviewView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .safeAreaInset(edge: .bottom) {
                         if let template = appModel.activePrintTemplate {
-                            Text("打印模板：\(template.name) · \(template.paper) · \(template.scale) · \(template.copies) 份")
+                            Text(verbatim: AppCopy.printTemplateLine(
+                                name: template.name,
+                                paper: template.paper,
+                                scale: template.scale,
+                                copies: template.copies
+                            ))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity)

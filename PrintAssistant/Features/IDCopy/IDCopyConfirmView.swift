@@ -18,11 +18,11 @@ struct IDCopyConfirmView: View {
                     .frame(maxHeight: 360)
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card))
                     .shadow(color: .black.opacity(0.10), radius: 16, y: 8)
-                    .accessibilityLabel("身份证\(side.displayName)拍摄结果")
+                    .accessibilityLabel(Text(side.reviewAccessibilityLabel))
             }
 
             VStack(spacing: DesignTokens.Spacing.xs) {
-                Text("检查\(side.displayName)")
+                Text(side.reviewHeading)
                     .font(.title2.bold())
                 Text("确认文字清晰、没有明显反光，并且四个边角都完整。")
                     .foregroundStyle(.secondary)

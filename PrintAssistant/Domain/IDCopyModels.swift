@@ -8,8 +8,36 @@ struct IDCopyDraft: Hashable, Sendable {
 
         var displayName: String {
             switch self {
-            case .front: "人像面"
-            case .back: "国徽面"
+            case .front: String(localized: "人像面")
+            case .back: String(localized: "国徽面")
+            }
+        }
+
+        var captureHeading: String {
+            switch self {
+            case .front: String(localized: "拍摄身份证人像面")
+            case .back: String(localized: "拍摄身份证国徽面")
+            }
+        }
+
+        var captureButtonTitle: String {
+            switch self {
+            case .front: String(localized: "拍摄人像面")
+            case .back: String(localized: "拍摄国徽面")
+            }
+        }
+
+        var reviewHeading: String {
+            switch self {
+            case .front: String(localized: "检查人像面")
+            case .back: String(localized: "检查国徽面")
+            }
+        }
+
+        var reviewAccessibilityLabel: String {
+            switch self {
+            case .front: String(localized: "身份证人像面拍摄结果")
+            case .back: String(localized: "身份证国徽面拍摄结果")
             }
         }
     }
