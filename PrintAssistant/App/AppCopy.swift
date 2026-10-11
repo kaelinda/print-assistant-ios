@@ -90,8 +90,12 @@ enum AppCopy {
     }
 
     static var id1CardSize: String {
-        let style = Measurement<UnitLength>.FormatStyle(width: .abbreviated, usage: .asProvided)
-            .precision(.fractionLength(2))
+        let number = FloatingPointFormatStyle<Double>().precision(.fractionLength(2))
+        let style = Measurement<UnitLength>.FormatStyle(
+            width: .abbreviated,
+            usage: .asProvided,
+            numberFormatStyle: number
+        )
         let width = Measurement(value: 85.60, unit: UnitLength.millimeters).formatted(style)
         let height = Measurement(value: 53.98, unit: UnitLength.millimeters).formatted(style)
         return "\(width) × \(height)"
