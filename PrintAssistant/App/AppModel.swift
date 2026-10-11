@@ -32,6 +32,43 @@ final class AppModel {
         case idCopyLayout(IDCopyDraft)
         case idCopyGenerating(IDCopyDraft)
         case idCopySuccess(DocumentRecord.ID)
+
+        case pdfMergeSelection
+        case pdfMergeProcessing(PDFMergeDraft)
+        case pdfMergeSuccess(DocumentRecord.ID)
+
+        case pdfSplitSource
+        case pdfSplitEditor(PDFSplitDraft)
+        case pdfSplitProcessing(PDFSplitDraft)
+        case pdfSplitSuccess([DocumentRecord.ID])
+
+        case pdfPageSource
+        case pdfPageEditor(PDFPageManagementDraft)
+        case pdfPageProcessing(PDFPageManagementDraft)
+        case pdfPageSuccess(DocumentRecord.ID)
+
+        case templateCenter
+        case templateEditor(PrintTemplate)
+        case templateApply(PrintTemplate)
+        case batchSelection
+        case batchProcessing([DocumentRecord.ID])
+        case batchSuccess([DocumentRecord.ID])
+        case pdfCompressionSource
+        case pdfCompressionProcessing(PDFSourceItem)
+        case pdfCompressionSuccess(DocumentRecord.ID)
+        case pdfProtectionSource
+        case pdfProtection(PDFSourceItem)
+        case pdfProtectionSuccess(DocumentRecord.ID)
+        case pdfUtility(PDFUtilityMode)
+        case photoIDSource
+        case photoIDCrop(PhotoIDDraft)
+        case photoIDGenerating(PhotoIDDraft)
+        case photoIDSuccess(DocumentRecord.ID)
+        case imageExport(DocumentRecord.ID)
+        case settings
+        case privacy
+        case privacyPolicy
+        case feedback
     }
 
     var selectedTab: Tab = .recent
@@ -42,15 +79,21 @@ final class AppModel {
     let library: DocumentLibrary
     let pdfService: PDFDocumentService
     let ocrService: OCRRecognitionService
+    let pdfOperationService: PDFOperationService
+    let pdfImportService: PDFImportService
 
     init(
         library: DocumentLibrary = .init(),
         pdfService: PDFDocumentService = .init(),
-        ocrService: OCRRecognitionService = .init()
+        ocrService: OCRRecognitionService = .init(),
+        pdfOperationService: PDFOperationService = .init(),
+        pdfImportService: PDFImportService = .init()
     ) {
         self.library = library
         self.pdfService = pdfService
         self.ocrService = ocrService
+        self.pdfOperationService = pdfOperationService
+        self.pdfImportService = pdfImportService
     }
 
     func push(_ route: Route) {

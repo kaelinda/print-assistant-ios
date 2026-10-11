@@ -16,7 +16,7 @@ struct PDFDocumentServiceTests {
             filename: "test-\(UUID().uuidString).pdf"
         )
 
-        #expect(FileManager.default.fileExists(atPath: url.path()))
+        #expect(FileManager.default.fileExists(atPath: url.path))
         let document = PDFDocument(url: url)
         #expect(document?.pageCount == 2)
 
