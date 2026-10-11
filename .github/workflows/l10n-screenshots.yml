@@ -2,6 +2,11 @@ name: Localization screenshots
 
 on:
   workflow_dispatch:
+  # The dispatch API is unavailable from this environment. A push to the
+  # screenshot branch starts the same job; develop only runs it manually.
+  push:
+    branches:
+      - cursor/l10n-screenshots-6a75
 
 jobs:
   screenshots:
