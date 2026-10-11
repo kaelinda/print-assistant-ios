@@ -7,7 +7,18 @@ struct PDFPreviewView: View {
 
     var body: some View {
         Group {
-            if let document = appModel.library.document(id: documentID) {
+            if let document = appModel.library.document(id: documentID), document.isPasswordProtected {
+                ContentUnavailableView {
+                    Label("文件已加密", systemImage: "lock.doc")
+                } description: {
+                    Text("解锁后才能预览、识别或打印。")
+                } actions: {
+                    Button("解除 PDF 密码") {
+                        appModel.push(.pdfUtility(.unlock, document.id))
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else if let document = appModel.library.document(id: documentID) {
                 PDFKitView(url: document.localURL)
                     .ignoresSafeArea(edges: .bottom)
                     .navigationTitle("打印预览")

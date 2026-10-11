@@ -58,18 +58,18 @@ struct BatchSelectionView: View {
             onFiles: { sources in
                 do {
                     for source in sources {
-                        guard let values = try? source.url.resourceValues(forKeys: [.fileSizeKey]),
-                              let pdf = PDFDocument(url: source.url),
-                              pdf.pageCount > 0 else {
+                        guard let inspection = PDFFileInspection.inspect(url: source.url) else {
                             appModel.pdfImportService.cleanup([source])
                             continue
                         }
+                        let values = try source.url.resourceValues(forKeys: [.fileSizeKey])
                         let record = DocumentRecord(
                             name: source.displayName,
-                            pageCount: pdf.pageCount,
+                            pageCount: inspection.pageCount,
                             byteCount: Int64(values.fileSize ?? 0),
                             source: .files,
-                            localURL: source.url
+                            localURL: source.url,
+                            isPasswordProtected: inspection.isLocked
                         )
                         try appModel.library.add(record)
                     }
