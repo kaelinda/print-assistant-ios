@@ -1,6 +1,6 @@
 import Foundation
 
-struct RecentSearchStore: Sendable {
+struct RecentSearchStore {
     static let storageKey = "print-assistant.recent-searches"
     static let limit = 8
 
