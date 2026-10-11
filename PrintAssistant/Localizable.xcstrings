@@ -5756,7 +5756,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Photos access is required to add pictures. Allow Print Assistant to write to Photos in Settings."
+            "value": "No permission to add photos. Allow Print Assistant to write to Photos in Settings."
           }
         }
       }

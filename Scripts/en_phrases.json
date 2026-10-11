@@ -295,7 +295,7 @@
   "没有可导入的 PDF。": "No PDF to import.",
   "没有可用的邮件应用": "No mail app is available",
   "没有找到匹配文件": "No matching files",
-  "没有添加照片的权限。请在系统设置中允许打印助手写入照片。": "Photos access is required to add pictures. Allow Print Assistant to write to Photos in Settings.",
+  "没有添加照片的权限。请在系统设置中允许打印助手写入照片。": "No permission to add photos. Allow Print Assistant to write to Photos in Settings.",
   "没有符合条件的文件": "No files match this filter",
   "没有识别到文字": "No text recognized",
   "没有选择 PDF 文件。": "No PDF was selected.",
