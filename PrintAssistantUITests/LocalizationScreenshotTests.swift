@@ -37,8 +37,7 @@ final class LocalizationScreenshotTests: XCTestCase {
         ]
 
         for pass in passes {
-            XCUIDevice.shared.appearance = .light
-            let app = launch(pass.launchArguments)
+            let app = launch(pass.launchArguments, dark: false)
             captureTab("tab-recent", title: pass.recent, in: app, name: "\(pass.prefix)-recent", output: output)
             captureTab("tab-files", title: pass.files, in: app, name: "\(pass.prefix)-files", output: output)
             captureTab("tab-tools", title: pass.tools, in: app, name: "\(pass.prefix)-tools", output: output)
@@ -46,14 +45,11 @@ final class LocalizationScreenshotTests: XCTestCase {
             openSettings(in: app, title: pass.settings, name: "\(pass.prefix)-settings", output: output)
             app.terminate()
 
-            XCUIDevice.shared.appearance = .dark
-            let darkApp = launch(pass.launchArguments)
+            let darkApp = launch(pass.launchArguments, dark: true)
             captureTab("tab-recent", title: pass.recent, in: darkApp, name: "\(pass.prefix)-recent-dark", output: output)
             captureTab("tab-tools", title: pass.tools, in: darkApp, name: "\(pass.prefix)-tools-dark", output: output)
             darkApp.terminate()
         }
-
-        XCUIDevice.shared.appearance = .light
     }
 
     private struct ScreenPass {
@@ -66,9 +62,10 @@ final class LocalizationScreenshotTests: XCTestCase {
         let settings: String
     }
 
-    private func launch(_ arguments: [String]) -> XCUIApplication {
+    private func launch(_ arguments: [String], dark: Bool) -> XCUIApplication {
+        XCUIDevice.shared.appearance = dark ? .dark : .light
         let app = XCUIApplication()
-        app.launchArguments = arguments
+        app.launchArguments = arguments + [dark ? "ScreenshotAppearanceDark" : "ScreenshotAppearanceLight"]
         app.launch()
         return app
     }
