@@ -27,7 +27,14 @@ final class PrintAssistantUITests: XCTestCase {
 
     func testPDFToolEntryScreensRender() throws {
         let app = XCUIApplication()
-        for title in ["合并 PDF", "拆分 PDF", "页面管理", "压缩 PDF", "加密 PDF", "解除 PDF 密码"] {
+        for (toolTitle, navigationTitle) in [
+            ("合并 PDF", "合并 PDF"),
+            ("拆分 PDF", "拆分 PDF"),
+            ("PDF 工具箱", "页面管理"),
+            ("压缩 PDF", "压缩 PDF"),
+            ("保护 PDF", "加密 PDF"),
+            ("解除 PDF 密码", "解除 PDF 密码")
+        ] {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
@@ -36,15 +43,15 @@ final class PrintAssistantUITests: XCTestCase {
             tools.tap()
             assertSelected(tools, "Tools tab not selected")
 
-            let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
-            for _ in 0..<6 {
+            let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", toolTitle)).firstMatch
+            for _ in 0..<8 {
                 if tool.exists && tool.isHittable { break }
                 app.swipeUp()
             }
-            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(title)")
+            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(toolTitle)")
             tool.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Failed to open: \(title)")
-            attachScreenshot(of: app, named: "PDF-tool-\(title)")
+            XCTAssertTrue(app.navigationBars[navigationTitle].waitForExistence(timeout: 10), "Failed to open: \(toolTitle)")
+            attachScreenshot(of: app, named: "PDF-tool-\(toolTitle)")
         }
     }
 

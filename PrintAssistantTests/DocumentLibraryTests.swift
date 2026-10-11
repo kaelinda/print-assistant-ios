@@ -130,10 +130,15 @@ struct DocumentLibraryTests {
 
         let record = try fixture.add(name: "sample.pdf", source: .files)
         let index = fixture.root.appending(path: "PrintAssistant/documents.json", directoryHint: .notDirectory)
-        let json = try String(contentsOf: index, encoding: .utf8)
+        let rows = try #require(
+            JSONSerialization.jsonObject(with: Data(contentsOf: index)) as? [[String: Any]]
+        )
+        let storedPath = try #require(rows.first?["localURL"] as? String)
 
-        #expect(json.contains("Documents/"))
-        #expect(!json.contains(fixture.root.path))
+        #expect(storedPath.hasPrefix("Documents/"))
+        #expect(!storedPath.hasPrefix("/"))
+        #expect(!storedPath.hasPrefix("file:"))
+        #expect(!storedPath.contains(fixture.root.lastPathComponent))
 
         let movedRoot = FileManager.default.temporaryDirectory
             .appending(path: "PrintAssistantMoved-\(UUID().uuidString)", directoryHint: .isDirectory)
