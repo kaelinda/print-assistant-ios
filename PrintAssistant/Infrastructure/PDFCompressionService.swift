@@ -11,11 +11,11 @@ struct PDFCompressionService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .unreadablePDF: "PDF 文件无法读取或已经损坏。"
-            case .lockedPDF: "受密码保护的 PDF 需要先解锁。"
-            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
-            case .unableToWrite: "无法写入压缩后的 PDF。"
-            case .noMeaningfulSavings: "这个 PDF 已经比较紧凑，没有可观的压缩空间。"
+            case .unreadablePDF: String(localized: "PDF 文件无法读取或已经损坏。")
+            case .lockedPDF: String(localized: "受密码保护的 PDF 需要先解锁。")
+            case .outputConflictsWithSource: String(localized: "输出文件不能覆盖源 PDF。")
+            case .unableToWrite: String(localized: "无法写入压缩后的 PDF。")
+            case .noMeaningfulSavings: String(localized: "这个 PDF 已经比较紧凑，没有可观的压缩空间。")
             }
         }
     }

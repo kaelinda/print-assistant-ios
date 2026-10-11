@@ -15,15 +15,15 @@ struct PDFOperationService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .insufficientInputs: "至少需要两个 PDF 文件。"
-            case .unreadablePDF: "PDF 文件无法读取或已经损坏。"
-            case .lockedPDF: "PDF 已受密码保护，当前无法处理。"
-            case .invalidRange: "拆分页码范围无效。"
-            case .invalidPageSelection: "页面选择包含不存在的页码。"
-            case .emptyOutput: "操作后不能生成空 PDF。"
-            case .unableToCopyPage: "无法复制 PDF 页面。"
-            case .unableToWrite: "无法写入 PDF 结果。"
-            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
+            case .insufficientInputs: String(localized: "至少需要两个 PDF 文件。")
+            case .unreadablePDF: String(localized: "PDF 文件无法读取或已经损坏。")
+            case .lockedPDF: String(localized: "PDF 已受密码保护，当前无法处理。")
+            case .invalidRange: String(localized: "拆分页码范围无效。")
+            case .invalidPageSelection: String(localized: "页面选择包含不存在的页码。")
+            case .emptyOutput: String(localized: "操作后不能生成空 PDF。")
+            case .unableToCopyPage: String(localized: "无法复制 PDF 页面。")
+            case .unableToWrite: String(localized: "无法写入 PDF 结果。")
+            case .outputConflictsWithSource: String(localized: "输出文件不能覆盖源 PDF。")
             }
         }
     }

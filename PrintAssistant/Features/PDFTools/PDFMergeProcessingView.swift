@@ -67,7 +67,7 @@ struct PDFMergeProcessingView: View {
     private func merge() async {
         do {
             let record = try await appModel.runExclusive { () -> DocumentRecord in
-                let filename = "合并文件-\(UUID().uuidString).pdf"
+                let filename = "\(String(localized: "合并文件"))-\(UUID().uuidString).pdf"
                 let url = try await appModel.pdfOperationService.merge(
                     urls: draft.sources.map(\.url),
                     filename: filename

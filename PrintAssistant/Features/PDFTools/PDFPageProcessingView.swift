@@ -60,7 +60,7 @@ struct PDFPageProcessingView: View {
     @MainActor
     private func generate() async {
         do {
-            let filename = "页面调整-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "页面调整"))
             let url = try await appModel.pdfOperationService.applyPagePlan(
                 .init(sourceURL: draft.source.url, pageIndexes: draft.pageIndexes),
                 filename: filename

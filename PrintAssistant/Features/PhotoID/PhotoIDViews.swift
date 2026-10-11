@@ -65,7 +65,7 @@ struct PhotoIDSourceView: View {
         }
         .alert("无法读取照片", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 }
 
@@ -155,7 +155,7 @@ struct PhotoIDGeneratingView: View {
     @MainActor
     private func generate() async {
         do {
-            let filename = "证件照-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "证件照"))
             let url = try await appModel.pdfService.makePhotoIDPDF(from: draft, filename: filename)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(

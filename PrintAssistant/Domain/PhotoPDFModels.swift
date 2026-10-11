@@ -20,8 +20,8 @@ struct PhotoPDFDraft: Hashable, Sendable {
 
         var displayName: String {
             switch self {
-            case .a4: "A4"
-            case .letter: "Letter"
+            case .a4: AppCopy.paperName("A4")
+            case .letter: AppCopy.paperName("Letter")
             }
         }
 
@@ -39,8 +39,8 @@ struct PhotoPDFDraft: Hashable, Sendable {
 
         var displayName: String {
             switch self {
-            case .fit: "完整显示"
-            case .fill: "填满页面"
+            case .fit: String(localized: "完整显示")
+            case .fill: String(localized: "填满页面")
             }
         }
     }

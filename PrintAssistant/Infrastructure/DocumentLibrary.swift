@@ -11,9 +11,9 @@ final class DocumentLibrary {
 
         var displayName: String {
             switch self {
-            case .modified: "最近修改"
-            case .name: "名称"
-            case .size: "大小"
+            case .modified: String(localized: "最近修改")
+            case .name: String(localized: "名称")
+            case .size: String(localized: "大小")
             }
         }
     }
@@ -28,12 +28,12 @@ final class DocumentLibrary {
 
         var displayName: String {
             switch self {
-            case .all: "全部"
+            case .all: String(localized: "全部")
             case .pdf: "PDF"
-            case .scan: "扫描"
-            case .photos: "图片 PDF"
-            case .generated: "生成"
-            case .files: "导入"
+            case .scan: String(localized: "扫描")
+            case .photos: String(localized: "图片 PDF")
+            case .generated: String(localized: "生成")
+            case .files: String(localized: "导入")
             }
         }
     }
@@ -45,9 +45,9 @@ final class DocumentLibrary {
 
         var errorDescription: String? {
             switch self {
-            case .emptyName: "文件名不能为空。"
-            case .duplicateName: "已有同名文件，请使用其他名称。"
-            case .missingDocument: "文件不存在或已被移动。"
+            case .emptyName: String(localized: "文件名不能为空。")
+            case .duplicateName: String(localized: "已有同名文件，请使用其他名称。")
+            case .missingDocument: String(localized: "文件不存在或已被移动。")
             }
         }
     }
@@ -337,7 +337,7 @@ final class DocumentLibrary {
         } catch {
             documents = []
             backupCorruptIndex()
-            persistenceError = "文件库索引已损坏，原文件已备份，未写入空索引。"
+            persistenceError = String(localized: "文件库索引已损坏，原文件已备份，未写入空索引。")
         }
     }
 

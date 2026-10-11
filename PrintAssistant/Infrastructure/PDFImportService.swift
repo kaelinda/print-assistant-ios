@@ -7,8 +7,8 @@ struct PDFImportService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .noFiles: "没有选择 PDF 文件。"
-            case .unableToStage: "无法读取所选 PDF 文件。"
+            case .noFiles: String(localized: "没有选择 PDF 文件。")
+            case .unableToStage: String(localized: "无法读取所选 PDF 文件。")
             }
         }
     }
@@ -62,7 +62,7 @@ struct PDFImportService: Sendable {
         let sanitized = base
             .replacingOccurrences(of: "/", with: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = sanitized.isEmpty ? "导入文件" : sanitized
+        let name = sanitized.isEmpty ? String(localized: "导入文件") : sanitized
         return "\(UUID().uuidString)-\(name)"
     }
 }

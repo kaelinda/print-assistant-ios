@@ -35,7 +35,7 @@ struct OCRCameraView: View {
             }
         }
         .padding(DesignTokens.Spacing.lg)
-        .navigationTitle("OCR 拍照")
+        .navigationTitle("拍照识别")
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $isPresentingCamera) {
             DocumentCameraView(
@@ -66,7 +66,7 @@ struct OCRCameraView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 
@@ -75,7 +75,7 @@ struct OCRCameraView: View {
             guard let data = images[0].jpegData(compressionQuality: 0.96) else {
                 throw CocoaError(.fileWriteUnknown)
             }
-            return OCRInput(imageData: data, displayName: "OCR 拍照")
+            return OCRInput(imageData: data, displayName: String(localized: "拍照识别"))
         }
 
         let document = PDFDocument()
@@ -87,7 +87,7 @@ struct OCRCameraView: View {
         }
 
         let url = LibraryPaths.filesDirectory().appending(
-            path: "OCR-\(UUID().uuidString).pdf",
+            path: "\(String(localized: "拍照识别"))-\(UUID().uuidString).pdf",
             directoryHint: .notDirectory
         )
         guard document.write(to: url) else {
@@ -96,7 +96,7 @@ struct OCRCameraView: View {
 
         return OCRInput(
             pdfURL: url,
-            displayName: "OCR 拍照（\(images.count) 页）"
+            displayName: String(localized: "拍照识别（\(images.count) 页）")
         )
     }
 }

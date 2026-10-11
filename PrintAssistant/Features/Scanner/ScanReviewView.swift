@@ -51,7 +51,7 @@ struct ScanReviewView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(saveError ?? "未知错误")
+            Text(saveError ?? String(localized: "未知错误"))
         }
     }
 
@@ -60,7 +60,7 @@ struct ScanReviewView: View {
         isSaving = true
 
         do {
-            let filename = "扫描文档-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "扫描文档"))
             let url = try appModel.pdfService.makePDF(from: draft.pages, filename: filename)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(
@@ -72,11 +72,12 @@ struct ScanReviewView: View {
             )
             try appModel.library.add(record)
             appModel.path = [.document(record.id)]
-            appModel.transientMessage = "已保存到本机"
+            let savedMessage = String(localized: "已保存到本机")
+            appModel.transientMessage = savedMessage
 
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(1.6))
-                if appModel.transientMessage == "已保存到本机" {
+                if appModel.transientMessage == savedMessage {
                     appModel.transientMessage = nil
                 }
             }

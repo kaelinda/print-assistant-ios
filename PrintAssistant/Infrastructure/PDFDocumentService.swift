@@ -9,9 +9,9 @@ struct PDFDocumentService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .unableToCreatePage: "无法创建 PDF 页面。"
-            case .unableToDecodeImage: "有图片无法读取，请重新选择。"
-            case .unableToWrite: "无法写入 PDF 文件。"
+            case .unableToCreatePage: String(localized: "无法创建 PDF 页面。")
+            case .unableToDecodeImage: String(localized: "有图片无法读取，请重新选择。")
+            case .unableToWrite: String(localized: "无法写入 PDF 文件。")
             }
         }
     }

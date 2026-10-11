@@ -20,7 +20,7 @@ struct IDCopyCaptureView: View {
                 .accessibilityHidden(true)
 
             VStack(spacing: DesignTokens.Spacing.xs) {
-                Text("拍摄身份证\(side.displayName)")
+                Text(side.captureHeading)
                     .font(.title2.bold())
 
                 Text("每次只拍一面。请让四个边角完整可见，并尽量避免反光。")
@@ -31,7 +31,7 @@ struct IDCopyCaptureView: View {
             Spacer()
 
             PrimaryActionButton(
-                title: "拍摄\(side.displayName)",
+                title: LocalizedStringKey(stringLiteral: side.captureButtonTitle),
                 state: VNDocumentCameraViewController.isSupported ? .enabled : .disabled
             ) {
                 isPresentingCamera = true
@@ -46,11 +46,11 @@ struct IDCopyCaptureView: View {
                     isPresentingCamera = false
 
                     guard images.count == 1 else {
-                        errorMessage = "身份证每次只需要拍摄一面，请重新拍摄。"
+                        errorMessage = String(localized: "身份证每次只需要拍摄一面，请重新拍摄。")
                         return
                     }
                     guard let data = images[0].jpegData(compressionQuality: 0.98) else {
-                        errorMessage = "无法读取拍摄结果，请重新拍摄。"
+                        errorMessage = String(localized: "无法读取拍摄结果，请重新拍摄。")
                         return
                     }
 
@@ -72,7 +72,7 @@ struct IDCopyCaptureView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 }

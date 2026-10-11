@@ -130,7 +130,7 @@ struct FileDetailView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(operationError ?? "未知错误")
+            Text(operationError ?? String(localized: "未知错误"))
         }
     }
 
@@ -161,7 +161,7 @@ struct FileDetailView: View {
     private func rename() {
         do {
             try appModel.library.rename(id: documentID, to: renameText)
-            appModel.transientMessage = "已重命名"
+            appModel.transientMessage = String(localized: "已重命名")
         } catch {
             operationError = error.localizedDescription
         }
@@ -171,7 +171,7 @@ struct FileDetailView: View {
         do {
             try appModel.library.delete(id: documentID)
             dismiss()
-            appModel.transientMessage = "文件已删除"
+            appModel.transientMessage = String(localized: "文件已删除")
         } catch {
             operationError = error.localizedDescription
         }
@@ -179,10 +179,10 @@ struct FileDetailView: View {
 
     private func sourceName(_ source: DocumentRecord.Source) -> String {
         switch source {
-        case .scan: "扫描"
-        case .photos: "照片"
-        case .files: "文件"
-        case .generated: "生成"
+        case .scan: String(localized: "扫描")
+        case .photos: String(localized: "照片")
+        case .files: String(localized: "导入")
+        case .generated: String(localized: "生成")
         }
     }
 }

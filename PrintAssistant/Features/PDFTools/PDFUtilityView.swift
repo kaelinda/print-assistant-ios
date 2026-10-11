@@ -9,33 +9,33 @@ enum PDFUtilityMode: Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .compress: "压缩 PDF"
-        case .protect: "加密 PDF"
-        case .unlock: "解除 PDF 密码"
+        case .compress: String(localized: "压缩 PDF")
+        case .protect: String(localized: "加密 PDF")
+        case .unlock: String(localized: "解除 PDF 密码")
         }
     }
 
     var actionTitle: String {
         switch self {
-        case .compress: "压缩并保存新文件"
-        case .protect: "加密并保存新文件"
-        case .unlock: "解密并保存新文件"
+        case .compress: String(localized: "压缩并保存新文件")
+        case .protect: String(localized: "加密并保存新文件")
+        case .unlock: String(localized: "解密并保存新文件")
         }
     }
 
     var successTitle: String {
         switch self {
-        case .compress: "PDF 压缩完成"
-        case .protect: "PDF 加密完成"
-        case .unlock: "PDF 解密完成"
+        case .compress: String(localized: "PDF 压缩完成")
+        case .protect: String(localized: "PDF 加密完成")
+        case .unlock: String(localized: "PDF 解密完成")
         }
     }
 
     var outputPrefix: String {
         switch self {
-        case .compress: "压缩文件"
-        case .protect: "加密文件"
-        case .unlock: "解密文件"
+        case .compress: String(localized: "压缩文件")
+        case .protect: String(localized: "加密文件")
+        case .unlock: String(localized: "解密文件")
         }
     }
 }
@@ -80,7 +80,7 @@ struct PDFUtilityView: View {
                     Text(record.name)
                         .lineLimit(2)
                     if let savedFraction {
-                        Text("文件体积减少 \(Int((savedFraction * 100).rounded()))%")
+                        Text(verbatim: String(localized: "文件体积减少 \(savedFraction.formatted(.percent.precision(.fractionLength(0))))"))
                             .foregroundStyle(.secondary)
                     }
                     Text("新文件已保存到本机，原文件保持不变。")
@@ -193,7 +193,7 @@ struct PDFUtilityView: View {
                             ProgressView()
                                 .tint(.white)
                         }
-                        Text(isWorking ? "正在处理…" : mode.actionTitle)
+                        Text(verbatim: isWorking ? String(localized: "正在处理…") : mode.actionTitle)
                     }
                     .frame(maxWidth: .infinity, minHeight: 50)
                 }
@@ -233,7 +233,7 @@ struct PDFUtilityView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 

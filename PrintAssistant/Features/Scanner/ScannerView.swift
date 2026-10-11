@@ -45,6 +45,6 @@ struct ScannerView: View {
         }
         .alert("无法扫描", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 }

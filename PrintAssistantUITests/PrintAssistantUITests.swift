@@ -7,7 +7,7 @@ final class PrintAssistantUITests: XCTestCase {
     }
 
     func testMainTabsRenderAndNavigate() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launch()
 
         for (identifier, title) in [
@@ -26,7 +26,7 @@ final class PrintAssistantUITests: XCTestCase {
     }
 
     func testPDFToolEntryScreensRender() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         for (toolTitle, navigationTitle) in [
             ("合并 PDF", "合并 PDF"),
             ("拆分 PDF", "拆分 PDF"),
@@ -56,7 +56,7 @@ final class PrintAssistantUITests: XCTestCase {
     }
 
     func testPhotoOCRAndIDCopyEntryScreensRender() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         for (toolTitle, navigationTitle) in [
             ("图片转 PDF", "选择图片"),
             ("文字识别", "文字识别"),
@@ -88,6 +88,12 @@ final class PrintAssistantUITests: XCTestCase {
             )
             attachScreenshot(of: app, named: "extra-tool-\(toolTitle)")
         }
+    }
+
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_Hans"]
+        return app
     }
 
     private func assertSelected(_ element: XCUIElement, _ message: String) {

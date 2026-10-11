@@ -15,9 +15,9 @@ struct PhotoIDDraft: Hashable, Sendable {
 
         var displayName: String {
             switch self {
-            case .white: "白底"
-            case .blue: "蓝底"
-            case .red: "红底"
+            case .white: String(localized: "白底")
+            case .blue: String(localized: "蓝底")
+            case .red: String(localized: "红底")
             }
         }
     }

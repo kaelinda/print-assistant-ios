@@ -44,7 +44,7 @@ struct SearchView: View {
                     Button("清除") {
                         recentSearches.clear()
                         recentQueries = []
-                        appModel.transientMessage = "最近搜索已清除"
+                        appModel.transientMessage = String(localized: "最近搜索已清除")
                     }
                     .font(.footnote)
                     .foregroundStyle(DesignTokens.Color.accent)
@@ -60,7 +60,7 @@ struct SearchView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(recentQueries, id: \.self) { item in
-                            GlassChip(title: item, isSelected: false) { query = item }
+                            GlassChip(verbatim: item, isSelected: false) { query = item }
                         }
                     }
                 }
@@ -112,7 +112,7 @@ struct SearchView: View {
                     ForEach(Array(suggestionDocuments.enumerated()), id: \.element.id) { index, document in
                         suggestionRow(
                             name: document.name,
-                            detail: document.hasOCRText ? "OCR 已建立" : "\(document.pageCount) 页",
+                            detail: document.hasOCRText ? String(localized: "已建立文字索引") : String(localized: "\(document.pageCount) 页"),
                             icon: document.hasOCRText ? "person.text.rectangle" : "doc.text"
                         ) {
                             appModel.push(.document(document.id))

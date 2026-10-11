@@ -11,11 +11,11 @@ enum PhotoExportError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .missingFile: "文件不存在或已被移动。"
-        case .unreadablePDF: "PDF 文件无法读取。"
-        case .lockedPDF: "受密码保护的 PDF 需要先解锁。"
-        case .notAuthorized: "没有添加照片的权限。请在系统设置中允许打印助手写入照片。"
-        case .saveFailed: "照片保存失败，请重试。"
+        case .missingFile: String(localized: "文件不存在或已被移动。")
+        case .unreadablePDF: String(localized: "PDF 文件无法读取。")
+        case .lockedPDF: String(localized: "受密码保护的 PDF 需要先解锁。")
+        case .notAuthorized: String(localized: "没有添加照片的权限。请在系统设置中允许打印助手写入照片。")
+        case .saveFailed: String(localized: "照片保存失败，请重试。")
         }
     }
 
@@ -91,8 +91,8 @@ struct ImageExportView: View {
                 }
                 await MainActor.run {
                     isWorking = false
-                    message = "已保存 \(images.count) 页到照片"
-                    appModel.transientMessage = "图片导出完成"
+                    message = String(localized: "已保存 \(images.count) 页到照片")
+                    appModel.transientMessage = String(localized: "图片导出完成")
                 }
             } catch let error as PhotoExportError {
                 await MainActor.run {

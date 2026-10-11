@@ -85,7 +85,7 @@ struct PhotoPDFSelectionView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 
@@ -141,7 +141,7 @@ struct PhotoPDFSelectionView: View {
                 }
                 imported.append(.init(
                     data: data,
-                    displayName: "照片 \(items.count + index + 1)"
+                    displayName: String(localized: "照片 \(items.count + index + 1)")
                 ))
             }
 

@@ -15,10 +15,10 @@ struct OCRRecognitionService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .invalidImage: "无法读取图片。"
-            case .invalidPDF: "无法读取 PDF。"
-            case .lockedPDF: "受密码保护的 PDF 需要先解锁。"
-            case .noPages: "文件中没有可识别的页面。"
+            case .invalidImage: String(localized: "无法读取图片。")
+            case .invalidPDF: String(localized: "无法读取 PDF。")
+            case .lockedPDF: String(localized: "受密码保护的 PDF 需要先解锁。")
+            case .noPages: String(localized: "文件中没有可识别的页面。")
             }
         }
     }

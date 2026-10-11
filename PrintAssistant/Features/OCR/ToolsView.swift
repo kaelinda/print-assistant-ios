@@ -60,7 +60,7 @@ struct ToolsView: View {
     }
 
     private func toolSection(
-        title: String,
+        title: LocalizedStringKey,
         rows: [ToolDefinition]
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -69,8 +69,8 @@ struct ToolsView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                         GlassActionRow(
-                            title: row.title,
-                            subtitle: row.subtitle,
+                            title: LocalizedStringKey(stringLiteral: row.title),
+                            subtitle: LocalizedStringKey(stringLiteral: row.subtitle),
                             systemImage: row.systemImage,
                             tint: row.tint,
                             action: row.action
