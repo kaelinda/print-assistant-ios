@@ -10,8 +10,6 @@ struct FileDetailView: View {
     @State private var renameText = ""
     @State private var isConfirmingDelete = false
     @State private var operationError: String?
-    @State private var isPreparingOCR = false
-
     var body: some View {
         Group {
             if let document = appModel.library.document(id: documentID) {
@@ -62,18 +60,11 @@ struct FileDetailView: View {
                             Button {
                                 prepareOCR(for: document)
                             } label: {
-                                HStack {
-                                    if isPreparingOCR {
-                                        ProgressView()
-                                    } else {
-                                        Image(systemName: "text.viewfinder")
-                                    }
-                                    Text(document.hasOCRText ? "重新识别文字" : "识别文字")
-                                }
-                                .frame(maxWidth: .infinity, minHeight: 50)
+                                Label(document.hasOCRText ? "重新识别文字" : "识别文字", systemImage: "text.viewfinder")
+                                    .frame(maxWidth: .infinity, minHeight: 50)
                             }
                             .buttonStyle(.bordered)
-                            .disabled(isPreparingOCR)
+                            .disabled(appModel.isWorking)
 
                             Button {
                                 appModel.push(.imageExport(document.id))
@@ -141,28 +132,15 @@ struct FileDetailView: View {
     }
 
     private func prepareOCR(for document: DocumentRecord) {
-        guard !isPreparingOCR else { return }
-        isPreparingOCR = true
-
-        Task {
-            do {
-                let url = document.localURL
-                let data = try await Task.detached(priority: .userInitiated) {
-                    try Data(contentsOf: url)
-                }.value
-
-                isPreparingOCR = false
-                appModel.push(.ocrProcessing(.init(
-                    data: data,
-                    kind: .pdf,
-                    displayName: document.name,
-                    associatedDocumentID: document.id
-                )))
-            } catch {
-                isPreparingOCR = false
-                operationError = error.localizedDescription
-            }
+        guard FileManager.default.fileExists(atPath: document.localURL.path) else {
+            operationError = DocumentLibrary.LibraryError.missingDocument.localizedDescription
+            return
         }
+        appModel.push(.ocrProcessing(.init(
+            pdfURL: document.localURL,
+            displayName: document.name,
+            associatedDocumentID: document.id
+        )))
     }
 
     private func rename() {

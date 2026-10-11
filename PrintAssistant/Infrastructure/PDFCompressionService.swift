@@ -44,7 +44,8 @@ struct PDFCompressionService: Sendable {
     func compress(sourceURL: URL, filename: String) async throws -> Result {
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) { () throws -> Result in
+            try Task.checkCancellation()
             guard let document = PDFDocument(url: sourceURL), document.pageCount > 0 else {
                 throw CompressionError.unreadablePDF
             }
@@ -104,6 +105,11 @@ struct PDFCompressionService: Sendable {
                 originalBytes: originalBytes,
                 compressedBytes: compressedBytes
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 }

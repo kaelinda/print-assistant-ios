@@ -257,10 +257,12 @@ struct PDFUtilityView: View {
             var compression: PDFCompressionService.Result?
             switch mode {
             case .compress:
-                let result = try await PDFCompressionService().compress(
-                    sourceURL: source.url,
-                    filename: filename
-                )
+                let result = try await appModel.runExclusive {
+                    try await PDFCompressionService().compress(
+                        sourceURL: source.url,
+                        filename: filename
+                    )
+                }
                 output = result.url
                 compression = result
             case .protect:

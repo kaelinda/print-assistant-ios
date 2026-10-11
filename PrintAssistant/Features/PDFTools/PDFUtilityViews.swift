@@ -99,18 +99,23 @@ struct PDFCompressionProcessingView: View {
     @MainActor
     private func compress() async {
         do {
-            let filename = "\(source.displayName.replacingOccurrences(of: ".pdf", with: ""))-压缩.pdf"
-            let result = try await PDFCompressionService().compress(sourceURL: source.url, filename: filename)
-            let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
-            let record = DocumentRecord(
-                name: filename,
-                pageCount: PDFDocument(url: result.url)?.pageCount ?? 1,
-                byteCount: Int64(values.fileSize ?? 0),
-                source: .generated,
-                localURL: result.url
-            )
-            try appModel.library.add(record)
+            let record = try await appModel.runExclusive { () -> DocumentRecord in
+                let filename = "压缩文件-\(UUID().uuidString).pdf"
+                let result = try await PDFCompressionService().compress(sourceURL: source.url, filename: filename)
+                let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: filename,
+                    pageCount: PDFDocument(url: result.url)?.pageCount ?? 1,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .generated,
+                    localURL: result.url
+                )
+                try appModel.library.add(record)
+                return record
+            }
             appModel.replaceTop(with: .pdfCompressionSuccess(record.id))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }
