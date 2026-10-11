@@ -75,7 +75,7 @@ struct OCRCameraView: View {
             guard let data = images[0].jpegData(compressionQuality: 0.96) else {
                 throw CocoaError(.fileWriteUnknown)
             }
-            return OCRInput(data: data, kind: .image, displayName: "OCR 拍照")
+            return OCRInput(imageData: data, displayName: "OCR 拍照")
         }
 
         let document = PDFDocument()
@@ -86,13 +86,16 @@ struct OCRCameraView: View {
             document.insert(page, at: index)
         }
 
-        guard let data = document.dataRepresentation() else {
+        let url = LibraryPaths.filesDirectory().appending(
+            path: "OCR-\(UUID().uuidString).pdf",
+            directoryHint: .notDirectory
+        )
+        guard document.write(to: url) else {
             throw CocoaError(.fileWriteUnknown)
         }
 
         return OCRInput(
-            data: data,
-            kind: .pdf,
+            pdfURL: url,
             displayName: "OCR 拍照（\(images.count) 页）"
         )
     }

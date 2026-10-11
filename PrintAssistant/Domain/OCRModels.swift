@@ -1,22 +1,38 @@
 import Foundation
 
 struct OCRInput: Hashable, Sendable {
-    enum Kind: Hashable, Sendable {
-        case image
-        case pdf
+    enum Source: Hashable, Sendable {
+        case imageData(Data)
+        case imageFile(URL)
+        case pdfFile(URL)
     }
 
     let id = UUID()
-    let data: Data
-    let kind: Kind
+    let source: Source
     let displayName: String
     let associatedDocumentID: DocumentRecord.ID?
 
-    init(data: Data, kind: Kind, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
-        self.data = data
-        self.kind = kind
+    init(imageData: Data, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+        self.source = .imageData(imageData)
         self.displayName = displayName
         self.associatedDocumentID = associatedDocumentID
+    }
+
+    init(imageFile: URL, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+        self.source = .imageFile(imageFile)
+        self.displayName = displayName
+        self.associatedDocumentID = associatedDocumentID
+    }
+
+    init(pdfURL: URL, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+        self.source = .pdfFile(pdfURL)
+        self.displayName = displayName
+        self.associatedDocumentID = associatedDocumentID
+    }
+
+    var pdfURL: URL? {
+        if case .pdfFile(let url) = source { return url }
+        return nil
     }
 }
 

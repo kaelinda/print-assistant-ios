@@ -38,13 +38,15 @@ struct PDFOperationService: Sendable {
         guard urls.count >= 2 else { throw OperationError.insufficientInputs }
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
             let output = PDFDocument()
             var insertionIndex = 0
 
             for url in urls {
+                try Task.checkCancellation()
                 let source = try Self.open(url)
                 for pageIndex in 0..<source.pageCount {
+                    try Task.checkCancellation()
                     let page = try Self.copyPage(from: source, index: pageIndex)
                     output.insert(page, at: insertionIndex)
                     insertionIndex += 1
@@ -59,7 +61,12 @@ struct PDFOperationService: Sendable {
                 directory: directory,
                 protectedInputs: urls
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     func split(
