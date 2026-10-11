@@ -3,37 +3,19 @@ import SwiftUI
 struct AppRootView: View {
     @Environment(AppModel.self) private var appModel
 
-    private var selectedTabTitle: String {
-        switch appModel.selectedTab {
-        case .recent: "最近"
-        case .files: "文件"
-        case .tools: "工具"
-        case .search: "搜索"
-        }
-    }
-
     var body: some View {
         @Bindable var appModel = appModel
 
         NavigationStack(path: $appModel.path) {
-            TabView(selection: $appModel.selectedTab) {
-                RecentView()
-                    .tag(AppModel.Tab.recent)
-                    .tabItem { Label("最近", systemImage: "clock") }
-
-                FilesView()
-                    .tag(AppModel.Tab.files)
-                    .tabItem { Label("文件", systemImage: "folder") }
-
-                ToolsView()
-                    .tag(AppModel.Tab.tools)
-                    .tabItem { Label("工具", systemImage: "square.grid.2x2") }
-
-                SearchView()
-                    .tag(AppModel.Tab.search)
-                    .tabItem { Label("搜索", systemImage: "magnifyingglass") }
-            }
-            .navigationTitle(selectedTabTitle)
+            rootContent
+                .background(DesignTokens.Color.canvas.ignoresSafeArea())
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if appModel.path.isEmpty {
+                        GlassTabBar()
+                            .padding(.bottom, 4)
+                            .background(DesignTokens.Color.canvas)
+                    }
+                }
             .navigationDestination(for: AppModel.Route.self) { route in
                 switch route {
                 case .scanner:
@@ -92,8 +74,50 @@ struct AppRootView: View {
                     PDFPageProcessingView(draft: draft)
                 case .pdfPageSuccess(let id):
                     PDFPageSuccessView(documentID: id)
+                case .templateCenter:
+                    TemplateCenterView()
+                case .templateEditor(let template):
+                    TemplateEditorView(template: template)
+                case .templateApply(let template):
+                    TemplateApplyView(template: template)
+                case .batchSelection:
+                    BatchSelectionView()
+                case .batchProcessing(let ids):
+                    BatchProcessingView(documentIDs: ids)
+                case .batchSuccess(let ids):
+                    BatchSuccessView(documentIDs: ids)
+                case .pdfCompressionSource:
+                    PDFCompressionSourceView()
+                case .pdfCompressionProcessing(let source):
+                    PDFCompressionProcessingView(source: source)
+                case .pdfCompressionSuccess(let id):
+                    PDFCompressionSuccessView(documentID: id)
+                case .pdfProtectionSource:
+                    PDFProtectionSourceView()
+                case .pdfProtection(let source):
+                    PDFProtectionView(source: source)
+                case .pdfProtectionSuccess(let id):
+                    PDFProtectionSuccessView(documentID: id)
                 case .pdfUtility(let mode):
                     PDFUtilityView(mode: mode)
+                case .photoIDSource:
+                    PhotoIDSourceView()
+                case .photoIDCrop(let draft):
+                    PhotoIDCropView(draft: draft)
+                case .photoIDGenerating(let draft):
+                    PhotoIDGeneratingView(draft: draft)
+                case .photoIDSuccess(let id):
+                    PhotoIDSuccessView(documentID: id)
+                case .imageExport(let id):
+                    ImageExportView(documentID: id)
+                case .settings:
+                    SettingsView()
+                case .privacy:
+                    PrivacyView()
+                case .privacyPolicy:
+                    PrivacyPolicyView()
+                case .feedback:
+                    FeedbackView()
                 }
             }
         }
@@ -109,5 +133,18 @@ struct AppRootView: View {
             }
         }
     }
-}
 
+    @ViewBuilder
+    private var rootContent: some View {
+        switch appModel.selectedTab {
+        case .recent:
+            RecentView()
+        case .files:
+            FilesView()
+        case .tools:
+            ToolsView()
+        case .search:
+            SearchView()
+        }
+    }
+}
