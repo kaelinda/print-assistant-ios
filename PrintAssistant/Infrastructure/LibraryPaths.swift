@@ -43,11 +43,40 @@ enum LibraryPaths {
     }
 
     static func relativePath(for url: URL, root: URL) -> String? {
-        let rootPath = root.standardizedFileURL.path
-        let path = url.standardizedFileURL.path
-        let prefix = rootPath.hasSuffix("/") ? rootPath : rootPath + "/"
-        guard path.hasPrefix(prefix) else { return nil }
-        return String(path.dropFirst(prefix.count))
+        let pairs = [
+            (url, root),
+            (url.standardizedFileURL, root.standardizedFileURL),
+            (url.resolvingSymlinksInPath(), root.resolvingSymlinksInPath()),
+            (
+                url.standardizedFileURL.resolvingSymlinksInPath(),
+                root.standardizedFileURL.resolvingSymlinksInPath()
+            )
+        ]
+        for (file, base) in pairs {
+            if let relative = relativePath(filePath: file.path, rootPath: base.path) {
+                return relative
+            }
+            if let relative = relativePath(
+                filePath: stripPrivatePrefix(file.path),
+                rootPath: stripPrivatePrefix(base.path)
+            ) {
+                return relative
+            }
+        }
+        return nil
+    }
+
+    /// Simulator and macOS temp directories often disagree on the `/private` symlink prefix.
+    private static func stripPrivatePrefix(_ path: String) -> String {
+        path.hasPrefix("/private/") ? String(path.dropFirst("/private".count)) : path
+    }
+
+    private static func relativePath(filePath: String, rootPath: String) -> String? {
+        let root = rootPath.hasSuffix("/") ? String(rootPath.dropLast()) : rootPath
+        let prefix = root + "/"
+        guard filePath.hasPrefix(prefix) else { return nil }
+        let relative = String(filePath.dropFirst(prefix.count))
+        return relative.isEmpty ? nil : relative
     }
 
     static func isInsideLibrary(_ url: URL, root: URL) -> Bool {

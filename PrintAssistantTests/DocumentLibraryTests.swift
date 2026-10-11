@@ -117,6 +117,13 @@ struct DocumentLibraryTests {
     }
 
     @Test
+    func relativePathIgnoresPrivateTempPrefix() {
+        let root = URL(fileURLWithPath: "/var/folders/xx/T/base/PrintAssistant", isDirectory: true)
+        let file = URL(fileURLWithPath: "/private/var/folders/xx/T/base/PrintAssistant/Documents/id-sample.pdf")
+        #expect(LibraryPaths.relativePath(for: file, root: root) == "Documents/id-sample.pdf")
+    }
+
+    @Test
     func storesRelativePathsAndSurvivesLibraryRootMove() throws {
         let fixture = try Fixture()
         defer { fixture.cleanup() }
@@ -141,7 +148,15 @@ struct DocumentLibraryTests {
         let stored = try #require(reloaded.document(id: record.id))
         #expect(stored.name == "sample.pdf")
         #expect(FileManager.default.fileExists(atPath: stored.localURL.path))
-        #expect(stored.localURL.path.hasPrefix(movedRoot.path))
+        #expect(canonicalPath(stored.localURL).hasPrefix(canonicalPath(movedRoot) + "/"))
+    }
+
+    private func canonicalPath(_ url: URL) -> String {
+        let resolved = url.resolvingSymlinksInPath().standardizedFileURL.path
+        if resolved.hasPrefix("/private/") {
+            return String(resolved.dropFirst("/private".count))
+        }
+        return resolved
     }
 
     @Test

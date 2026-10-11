@@ -218,7 +218,8 @@ struct GlassTabBar: View {
             .shadow(color: DesignTokens.Color.shadow, radius: 5, y: 3)
             .accessibilityIdentifier(identifier(for: .search))
             .accessibilityLabel("搜索")
-            .accessibilityAddTraits(appModel.selectedTab == .search ? .isSelected : [])
+            .accessibilityAddTraits(appModel.selectedTab == .search ? AccessibilityTraits.isSelected : [])
+            .accessibilityRemoveTraits(appModel.selectedTab == .search ? [] : AccessibilityTraits.isSelected)
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 68)
@@ -256,7 +257,8 @@ struct GlassTabBar: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier(identifier(for: tab))
         .accessibilityLabel(title)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityAddTraits(isSelected ? AccessibilityTraits.isSelected : [])
+        .accessibilityRemoveTraits(isSelected ? [] : AccessibilityTraits.isSelected)
     }
 
     private func identifier(for tab: AppModel.Tab) -> String {
