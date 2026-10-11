@@ -191,6 +191,41 @@ struct DocumentLibraryTests {
     }
 
     @Test
+    func pdfFilterMatchesExtensionAndImportSourceStaysSeparate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let scan = try fixture.add(name: "扫描件.pdf", source: .scan)
+        let imported = try fixture.add(name: "外部.pdf", source: .files)
+        let note = try fixture.add(name: "备注.txt", source: .generated)
+
+        let pdfs = fixture.library.visibleDocuments(source: .pdf)
+        #expect(Set(pdfs.map(\.id)) == Set([scan.id, imported.id]))
+        #expect(!pdfs.map(\.id).contains(note.id))
+
+        let imports = fixture.library.visibleDocuments(source: .files)
+        #expect(imports.map(\.id) == [imported.id])
+    }
+
+    @Test
+    func passwordProtectionFlagDoesNotBumpModifiedDate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "secret.pdf", source: .files)
+        let before = record.modifiedAt
+        try fixture.library.setPasswordProtection(id: record.id, isProtected: true)
+
+        let updated = try #require(fixture.library.document(id: record.id))
+        #expect(updated.isPasswordProtected)
+        #expect(updated.modifiedAt == before)
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        #expect(reloaded.document(id: record.id)?.isPasswordProtected == true)
+        #expect(reloaded.document(id: record.id)?.modifiedAt == before)
+    }
+
+    @Test
     func unicodeFilenameSurvivesRelaunch() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "PrintAssistantUnicode-\(UUID().uuidString)", directoryHint: .isDirectory)

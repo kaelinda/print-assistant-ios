@@ -10,12 +10,14 @@ struct OCRRecognitionService: Sendable {
     enum RecognitionError: LocalizedError {
         case invalidImage
         case invalidPDF
+        case lockedPDF
         case noPages
 
         var errorDescription: String? {
             switch self {
             case .invalidImage: "无法读取图片。"
             case .invalidPDF: "无法读取 PDF。"
+            case .lockedPDF: "受密码保护的 PDF 需要先解锁。"
             case .noPages: "文件中没有可识别的页面。"
             }
         }
@@ -66,7 +68,7 @@ struct OCRRecognitionService: Sendable {
             throw RecognitionError.invalidPDF
         }
         guard !document.isLocked else {
-            throw RecognitionError.invalidPDF
+            throw RecognitionError.lockedPDF
         }
         guard document.pageCount > 0 else {
             throw RecognitionError.noPages

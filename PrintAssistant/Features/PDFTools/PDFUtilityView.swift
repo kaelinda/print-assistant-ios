@@ -43,6 +43,7 @@ enum PDFUtilityMode: Hashable, Sendable {
 struct PDFUtilityView: View {
     @Environment(AppModel.self) private var appModel
     let mode: PDFUtilityMode
+    let preselectedDocumentID: DocumentRecord.ID?
 
     @State private var selected: PDFSourceItem?
     @State private var isImporting = false
@@ -205,6 +206,7 @@ struct PDFUtilityView: View {
         }
         .navigationTitle(mode.title)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: applyPreselectedDocument)
         .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
@@ -233,6 +235,14 @@ struct PDFUtilityView: View {
         } message: {
             Text(errorMessage ?? "未知错误")
         }
+    }
+
+    @MainActor
+    private func applyPreselectedDocument() {
+        guard selected == nil,
+              let id = preselectedDocumentID,
+              let document = appModel.library.document(id: id) else { return }
+        choose(.init(url: document.localURL, displayName: document.name))
     }
 
     @MainActor

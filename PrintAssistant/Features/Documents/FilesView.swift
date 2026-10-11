@@ -57,9 +57,10 @@ struct FilesView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 GlassChip(title: "最近", isSelected: source == .all) { source = .all }
-                GlassChip(title: "PDF", isSelected: source == .generated) { source = .generated }
+                GlassChip(title: "PDF", isSelected: source == .pdf) { source = .pdf }
                 GlassChip(title: "扫描件", isSelected: source == .scan) { source = .scan }
                 GlassChip(title: "图片", isSelected: source == .photos) { source = .photos }
+                GlassChip(title: "导入", isSelected: source == .files) { source = .files }
             }
         }
         .scrollClipDisabled()

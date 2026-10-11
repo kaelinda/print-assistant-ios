@@ -48,7 +48,7 @@ struct FileDetailView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             Button("解除 PDF 密码") {
-                                appModel.push(.pdfUtility(.unlock))
+                                appModel.push(.pdfUtility(.unlock, document.id))
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.large)
@@ -121,6 +121,9 @@ struct FileDetailView: View {
                 ContentUnavailableView("文件不存在", systemImage: "doc.badge.exclamationmark")
             }
         }
+        .task(id: documentID) {
+            await refreshLockState()
+        }
         .alert("无法完成操作", isPresented: .init(
             get: { operationError != nil },
             set: { if !$0 { operationError = nil } }
@@ -131,9 +134,21 @@ struct FileDetailView: View {
         }
     }
 
+    private func refreshLockState() async {
+        guard let document = appModel.library.document(id: documentID) else { return }
+        let locked = PDFFileInspection.inspect(url: document.localURL)?.isLocked ?? false
+        guard locked != document.isPasswordProtected else { return }
+        try? appModel.library.setPasswordProtection(id: document.id, isProtected: locked)
+    }
+
     private func prepareOCR(for document: DocumentRecord) {
         guard FileManager.default.fileExists(atPath: document.localURL.path) else {
             operationError = DocumentLibrary.LibraryError.missingDocument.localizedDescription
+            return
+        }
+        if document.isPasswordProtected || PDFFileInspection.inspect(url: document.localURL)?.isLocked == true {
+            try? appModel.library.setPasswordProtection(id: document.id, isProtected: true)
+            operationError = PDFOperationService.OperationError.lockedPDF.localizedDescription
             return
         }
         appModel.push(.ocrProcessing(.init(

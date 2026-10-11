@@ -20,6 +20,7 @@ final class DocumentLibrary {
 
     enum SourceFilter: String, CaseIterable {
         case all
+        case pdf
         case scan
         case photos
         case generated
@@ -28,6 +29,7 @@ final class DocumentLibrary {
         var displayName: String {
             switch self {
             case .all: "全部"
+            case .pdf: "PDF"
             case .scan: "扫描"
             case .photos: "图片 PDF"
             case .generated: "生成"
@@ -77,6 +79,7 @@ final class DocumentLibrary {
         let filtered = documents.filter { document in
             let sourceMatches: Bool = switch source {
             case .all: true
+            case .pdf: document.localURL.pathExtension.lowercased() == "pdf"
             case .scan: document.source == .scan
             case .photos: document.source == .photos
             case .generated: document.source == .generated
@@ -180,6 +183,25 @@ final class DocumentLibrary {
         documents[index].searchableText = text
         documents[index].hasOCRText = !(text?.isEmpty ?? true)
         documents[index].modifiedAt = .now
+
+        do {
+            try persist()
+            persistenceError = nil
+        } catch {
+            documents[index] = previous
+            persistenceError = error.localizedDescription
+            throw error
+        }
+    }
+
+    func setPasswordProtection(id: DocumentRecord.ID, isProtected: Bool) throws {
+        guard let index = documents.firstIndex(where: { $0.id == id }) else {
+            throw LibraryError.missingDocument
+        }
+        guard documents[index].isPasswordProtected != isProtected else { return }
+
+        let previous = documents[index]
+        documents[index].isPasswordProtected = isProtected
 
         do {
             try persist()
