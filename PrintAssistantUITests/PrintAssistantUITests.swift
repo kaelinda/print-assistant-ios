@@ -9,17 +9,18 @@ final class PrintAssistantUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        for (tab, title) in [
-            ("最近", "最近"),
-            ("文件", "文件"),
-            ("搜索", "搜索"),
-            ("工具", "工具")
+        for (identifier, title) in [
+            ("tab-recent", "最近"),
+            ("tab-files", "文件"),
+            ("tab-search", "搜索"),
+            ("tab-tools", "工具")
         ] {
-            let tabButton = app.tabBars.buttons[tab]
-            XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(tab)")
+            let tabButton = app.buttons[identifier]
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(identifier)")
             tabButton.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Missing navigation screen: \(title)")
-            attachScreenshot(of: app, named: "tab-\(tab)")
+            assertSelected(tabButton, "Tab not selected: \(identifier)")
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 10), "Missing screen title: \(title)")
+            attachScreenshot(of: app, named: identifier)
         }
     }
 
@@ -29,9 +30,10 @@ final class PrintAssistantUITests: XCTestCase {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
+            let tools = app.buttons["tab-tools"]
             XCTAssertTrue(tools.waitForExistence(timeout: 15))
             tools.tap()
+            assertSelected(tools, "Tools tab not selected")
 
             let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
             for _ in 0..<6 {
@@ -55,9 +57,10 @@ final class PrintAssistantUITests: XCTestCase {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
+            let tools = app.buttons["tab-tools"]
             XCTAssertTrue(tools.waitForExistence(timeout: 15))
             tools.tap()
+            assertSelected(tools, "Tools tab not selected")
 
             let entry = app.buttons.matching(
                 NSPredicate(format: "label CONTAINS %@", toolTitle)
@@ -77,6 +80,14 @@ final class PrintAssistantUITests: XCTestCase {
             )
             attachScreenshot(of: app, named: "extra-tool-\(toolTitle)")
         }
+    }
+
+    private func assertSelected(_ element: XCUIElement, _ message: String) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isSelected == true"),
+            object: element
+        )
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: 5), .completed, message)
     }
 
     private func attachScreenshot(of app: XCUIApplication, named name: String) {

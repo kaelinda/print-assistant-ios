@@ -3,6 +3,8 @@ import SwiftUI
 struct SearchView: View {
     @Environment(AppModel.self) private var appModel
     @State private var query = ""
+    @State private var recentQueries: [String] = []
+    private let recentSearches = RecentSearchStore()
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -12,7 +14,7 @@ struct SearchView: View {
                     .foregroundStyle(DesignTokens.Color.primaryText)
                     .frame(minHeight: 52, alignment: .leading)
 
-                GlassSearchField(text: $query, prompt: "搜索 PDF、扫描件和 OCR 文字")
+                GlassSearchField(text: $query, prompt: "搜索 PDF、扫描件和 OCR 文字", onSubmit: rememberCurrentQuery)
 
                 if normalizedQuery.isEmpty {
                     emptyQueryContent
@@ -29,28 +31,41 @@ struct SearchView: View {
         .scrollDismissesKeyboard(.immediately)
         .background(DesignTokens.Color.canvas)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            recentQueries = recentSearches.queries
+        }
     }
 
     private var emptyQueryContent: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 GlassSectionHeader("最近搜索")
-                Button("清除") {
-                    appModel.transientMessage = "最近搜索已清除"
+                if !recentQueries.isEmpty {
+                    Button("清除") {
+                        recentSearches.clear()
+                        recentQueries = []
+                        appModel.transientMessage = "最近搜索已清除"
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(DesignTokens.Color.accent)
+                    .buttonStyle(.plain)
                 }
-                .font(.footnote)
-                .foregroundStyle(DesignTokens.Color.accent)
-                .buttonStyle(.plain)
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(["租赁合同", "身份证", "报销"], id: \.self) { item in
-                        GlassChip(title: item, isSelected: false) { query = item }
+            if recentQueries.isEmpty {
+                Text("还没有搜索记录。")
+                    .font(.footnote)
+                    .foregroundStyle(DesignTokens.Color.secondaryText)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(recentQueries, id: \.self) { item in
+                            GlassChip(title: item, isSelected: false) { query = item }
+                        }
                     }
                 }
+                .scrollClipDisabled()
             }
-            .scrollClipDisabled()
 
             indexStatusCard
 
@@ -81,15 +96,31 @@ struct SearchView: View {
         .background(DesignTokens.Color.stateSurface.opacity(0.72), in: RoundedRectangle(cornerRadius: 18))
     }
 
+    private var suggestionDocuments: [DocumentRecord] {
+        Array(appModel.library.documents.prefix(3))
+    }
+
+    @ViewBuilder
     private var suggestionCard: some View {
-        GlassCard(cornerRadius: 20) {
-            VStack(spacing: 0) {
-                suggestionRow(name: "租赁合同.pdf", detail: "最近修改", icon: "doc.text") {
-                    openFirstDocumentOrNotify()
-                }
-                Divider().padding(.leading, 64)
-                suggestionRow(name: "身份证复印件.pdf", detail: "OCR 已建立", icon: "person.text.rectangle") {
-                    openFirstDocumentOrNotify()
+        if suggestionDocuments.isEmpty {
+            Text("导入或扫描文件后，会根据资料库给出建议。")
+                .font(.footnote)
+                .foregroundStyle(DesignTokens.Color.secondaryText)
+        } else {
+            GlassCard(cornerRadius: 20) {
+                VStack(spacing: 0) {
+                    ForEach(Array(suggestionDocuments.enumerated()), id: \.element.id) { index, document in
+                        suggestionRow(
+                            name: document.name,
+                            detail: document.hasOCRText ? "OCR 已建立" : "\(document.pageCount) 页",
+                            icon: document.hasOCRText ? "person.text.rectangle" : "doc.text"
+                        ) {
+                            appModel.push(.document(document.id))
+                        }
+                        if index < suggestionDocuments.count - 1 {
+                            Divider().padding(.leading, 64)
+                        }
+                    }
                 }
             }
         }
@@ -147,7 +178,7 @@ struct SearchView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(results.enumerated()), id: \.element.id) { index, document in
                         Button {
-                            appModel.push(.document(document.id))
+                            openResult(document)
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "doc.text")
@@ -180,12 +211,14 @@ struct SearchView: View {
         }
     }
 
-    private func openFirstDocumentOrNotify() {
-        if let document = appModel.library.documents.first {
-            appModel.push(.document(document.id))
-        } else {
-            appModel.transientMessage = "扫描或导入文件后即可查看"
-        }
+    private func rememberCurrentQuery() {
+        recentSearches.remember(normalizedQuery)
+        recentQueries = recentSearches.queries
+    }
+
+    private func openResult(_ document: DocumentRecord) {
+        rememberCurrentQuery()
+        appModel.push(.document(document.id))
     }
 
     private var normalizedQuery: String {

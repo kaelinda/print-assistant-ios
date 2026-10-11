@@ -63,7 +63,7 @@ final class AppModel {
         case photoIDSource
         case photoIDCrop(PhotoIDDraft)
         case photoIDGenerating(PhotoIDDraft)
-        case photoIDSuccess(DocumentRecord.ID)
+        case photoIDSuccess(DocumentRecord.ID, sheetCount: Int)
         case imageExport(DocumentRecord.ID)
         case settings
         case privacy
