@@ -53,24 +53,14 @@ final class DocumentLibrary {
     private(set) var documents: [DocumentRecord] = []
     private(set) var persistenceError: String?
 
+    private let rootURL: URL
+    private let filesURL: URL
     private let indexURL: URL
 
     init(baseURL: URL? = nil) {
-        let root: URL
-        if let baseURL {
-            root = baseURL
-        } else {
-            root = (try? FileManager.default.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            )) ?? FileManager.default.temporaryDirectory
-        }
-
-        let directory = root.appending(path: "PrintAssistant", directoryHint: .isDirectory)
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        indexURL = directory.appending(path: "documents.json", directoryHint: .notDirectory)
+        rootURL = LibraryPaths.applicationRoot(baseURL: baseURL)
+        filesURL = LibraryPaths.filesDirectory(baseURL: baseURL)
+        indexURL = LibraryPaths.indexURL(baseURL: baseURL)
         load()
     }
 
@@ -113,6 +103,9 @@ final class DocumentLibrary {
     }
 
     func add(_ document: DocumentRecord) throws {
+        var document = document
+        document.localURL = try ingest(document.localURL)
+
         let previous = documents
         documents.removeAll { $0.id == document.id }
         documents.insert(document, at: 0)
@@ -198,6 +191,29 @@ final class DocumentLibrary {
         }
     }
 
+    /// Clears OCR text for every document in one atomic index write.
+    /// File modification dates stay unchanged.
+    func clearSearchableText() throws {
+        let previous = documents
+        var changed = false
+        for index in documents.indices {
+            guard documents[index].searchableText != nil || documents[index].hasOCRText else { continue }
+            documents[index].searchableText = nil
+            documents[index].hasOCRText = false
+            changed = true
+        }
+        guard changed else { return }
+
+        do {
+            try persist()
+            persistenceError = nil
+        } catch {
+            documents = previous
+            persistenceError = error.localizedDescription
+            throw error
+        }
+    }
+
     func delete(id: DocumentRecord.ID) throws {
         guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
         let record = documents[index]
@@ -231,30 +247,128 @@ final class DocumentLibrary {
         }
     }
 
+    private func ingest(_ url: URL) throws -> URL {
+        if LibraryPaths.isInsideLibrary(url, root: rootURL) {
+            return url.standardizedFileURL
+        }
+
+        try FileManager.default.createDirectory(at: filesURL, withIntermediateDirectories: true)
+        let destination = filesURL.appending(
+            path: "\(UUID().uuidString)-\(sanitizedFileName(url.lastPathComponent))",
+            directoryHint: .notDirectory
+        )
+        try FileManager.default.copyItem(at: url, to: destination)
+        try? FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: destination.path
+        )
+        return destination
+    }
+
+    private func sanitizedFileName(_ name: String) -> String {
+        let base = (name as NSString).lastPathComponent
+        let sanitized = base
+            .replacingOccurrences(of: "/", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return sanitized.isEmpty ? "文件" : sanitized
+    }
+
     private func load() {
         guard FileManager.default.fileExists(atPath: indexURL.path) else { return }
 
         do {
             let data = try Data(contentsOf: indexURL)
-            let decoded = try JSONDecoder().decode([DocumentRecord].self, from: data)
-            documents = decoded.filter { FileManager.default.fileExists(atPath: $0.localURL.path) }
-            if documents.count != decoded.count {
-                try persist()
+            let decoder = JSONDecoder()
+            decoder.userInfo[.printAssistantLibraryRoot] = rootURL
+            let decoded = try decoder.decode([DocumentRecord].self, from: data)
+            var resolved: [DocumentRecord] = []
+            var needsRewrite = false
+            resolved.reserveCapacity(decoded.count)
+
+            for record in decoded {
+                switch resolve(record) {
+                case .ready(let document):
+                    resolved.append(document)
+                case .migrated(let document):
+                    resolved.append(document)
+                    needsRewrite = true
+                case .missing:
+                    needsRewrite = true
+                }
+            }
+
+            documents = resolved
+            if needsRewrite {
+                do {
+                    try persist()
+                    persistenceError = nil
+                } catch {
+                    persistenceError = error.localizedDescription
+                }
             } else {
                 try FileManager.default.setAttributes(
                     [.protectionKey: FileProtectionType.complete],
                     ofItemAtPath: indexURL.path
                 )
+                persistenceError = nil
             }
-            persistenceError = nil
         } catch {
             documents = []
-            persistenceError = error.localizedDescription
+            backupCorruptIndex()
+            persistenceError = "文件库索引已损坏，原文件已备份，未写入空索引。"
         }
     }
 
+    private enum ResolveResult {
+        case ready(DocumentRecord)
+        case migrated(DocumentRecord)
+        case missing
+    }
+
+    private func resolve(_ record: DocumentRecord) -> ResolveResult {
+        if FileManager.default.fileExists(atPath: record.localURL.path) {
+            if LibraryPaths.isInsideLibrary(record.localURL, root: rootURL) {
+                return .ready(record)
+            }
+            if let copied = try? ingest(record.localURL) {
+                var migrated = record
+                migrated.localURL = copied
+                return .migrated(migrated)
+            }
+            return .ready(record)
+        }
+
+        let path = record.localURL.path
+        if let marker = path.range(of: "/PrintAssistant/") {
+            let relative = String(path[marker.upperBound...])
+            let candidate = LibraryPaths.url(relativePath: relative, root: rootURL)
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                var migrated = record
+                migrated.localURL = candidate
+                return .migrated(migrated)
+            }
+        }
+
+        return .missing
+    }
+
+    /// Moves a corrupt index aside. Does not write a replacement.
+    private func backupCorruptIndex() {
+        let stamp = ISO8601DateFormatter().string(from: .now)
+            .replacingOccurrences(of: ":", with: "-")
+        var backup = indexURL.deletingLastPathComponent()
+            .appending(path: "documents.json.corrupt-\(stamp)", directoryHint: .notDirectory)
+        if FileManager.default.fileExists(atPath: backup.path) {
+            backup = indexURL.deletingLastPathComponent()
+                .appending(path: "documents.json.corrupt-\(stamp)-\(UUID().uuidString)", directoryHint: .notDirectory)
+        }
+        try? FileManager.default.moveItem(at: indexURL, to: backup)
+    }
+
     private func persist() throws {
-        let data = try JSONEncoder().encode(documents)
+        let encoder = JSONEncoder()
+        encoder.userInfo[.printAssistantLibraryRoot] = rootURL
+        let data = try encoder.encode(documents)
         try data.write(to: indexURL, options: [.atomic])
         try FileManager.default.setAttributes(
             [.protectionKey: FileProtectionType.complete],

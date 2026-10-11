@@ -50,7 +50,10 @@ struct PDFUtilityRealFileTests {
         let library = DocumentLibrary(baseURL: fixture.root)
         try library.add(record)
         let relaunched = DocumentLibrary(baseURL: fixture.root)
-        #expect(relaunched.document(id: record.id)?.localURL == decrypted)
+        let stored = try #require(relaunched.document(id: record.id))
+        #expect(stored.name == "合同解密.pdf")
+        #expect(LibraryPaths.isInsideLibrary(stored.localURL, root: LibraryPaths.applicationRoot(baseURL: fixture.root)))
+        #expect(try Data(contentsOf: stored.localURL) == Data(contentsOf: decrypted))
         #expect(relaunched.visibleDocuments(query: "解密").map(\.id) == [record.id])
         #expect(FileManager.default.fileExists(atPath: decrypted.path))
     }

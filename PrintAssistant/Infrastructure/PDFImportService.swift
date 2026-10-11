@@ -13,24 +13,21 @@ struct PDFImportService: Sendable {
         }
     }
 
-    func stage(urls: [URL]) async throws -> [PDFSourceItem] {
+    /// Persistent destination. `nil` uses Application Support/PrintAssistant/Documents.
+    var filesDirectory: URL?
+
+    func copyIntoLibrary(urls: [URL]) async throws -> [PDFSourceItem] {
         guard !urls.isEmpty else { throw ImportError.noFiles }
+        let directory = filesDirectory ?? LibraryPaths.filesDirectory()
 
         return try await Task.detached(priority: .userInitiated) {
-            let root = FileManager.default.temporaryDirectory
-                .appending(path: "PrintAssistant-PDFImports", directoryHint: .isDirectory)
-            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
             var staged: [PDFSourceItem] = []
             do {
                 for source in urls {
-                    let accessed = source.startAccessingSecurityScopedResource()
-                    defer {
-                        if accessed { source.stopAccessingSecurityScopedResource() }
-                    }
-
-                    let destination = root.appending(
-                        path: "\(UUID().uuidString)-\(source.lastPathComponent)",
+                    let destination = directory.appending(
+                        path: Self.uniqueFileName(for: source.lastPathComponent),
                         directoryHint: .notDirectory
                     )
                     try FileManager.default.copyItem(at: source, to: destination)
@@ -58,5 +55,14 @@ struct PDFImportService: Sendable {
         for item in items where item.isTemporary {
             try? FileManager.default.removeItem(at: item.url)
         }
+    }
+
+    private static func uniqueFileName(for lastComponent: String) -> String {
+        let base = (lastComponent as NSString).lastPathComponent
+        let sanitized = base
+            .replacingOccurrences(of: "/", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = sanitized.isEmpty ? "导入文件" : sanitized
+        return "\(UUID().uuidString)-\(name)"
     }
 }

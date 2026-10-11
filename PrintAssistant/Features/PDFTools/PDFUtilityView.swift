@@ -205,13 +205,21 @@ struct PDFUtilityView: View {
         }
         .navigationTitle(mode.title)
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(
+        .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
-            allowsMultipleSelection: false
-        ) { result in
-            stage(result)
-        }
+            importer: appModel.pdfImportService,
+            onStart: { isStaging = true },
+            onFailure: { message in
+                isStaging = false
+                errorMessage = message
+            },
+            onFiles: { items in
+                isStaging = false
+                guard let staged = items.first else { return }
+                choose(staged)
+            }
+        )
         .onDisappear {
             if let selected {
                 appModel.pdfImportService.cleanup([selected])
@@ -235,21 +243,6 @@ struct PDFUtilityView: View {
         selected = source
         completedID = nil
         savedFraction = nil
-    }
-
-    private func stage(_ result: Result<[URL], Error>) {
-        Task { @MainActor in
-            isStaging = true
-            defer { isStaging = false }
-            do {
-                guard let url = try result.get().first else { return }
-                let items = try await appModel.pdfImportService.stage(urls: [url])
-                guard let staged = items.first else { return }
-                choose(staged)
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
     }
 
     @MainActor

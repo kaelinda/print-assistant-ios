@@ -34,10 +34,12 @@ struct SettingsView: View {
         }
         .confirmationDialog("清除本地文字索引？", isPresented: $showingClearIndex, titleVisibility: .visible) {
             Button("清除索引", role: .destructive) {
-                for document in appModel.library.documents {
-                    try? appModel.library.updateSearchableText(id: document.id, text: nil)
+                do {
+                    try appModel.library.clearSearchableText()
+                    appModel.transientMessage = "文字索引已清除"
+                } catch {
+                    appModel.transientMessage = error.localizedDescription
                 }
-                appModel.transientMessage = "文字索引已清除"
             }
             Button("取消", role: .cancel) {}
         } message: {
