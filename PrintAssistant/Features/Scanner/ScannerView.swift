@@ -10,7 +10,7 @@ struct ScannerView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Spacer()
             Image(systemName: "doc.viewfinder")
-                .font(.system(size: 58))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .accessibilityHidden(true)
             VStack(spacing: DesignTokens.Spacing.xs) {

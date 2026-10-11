@@ -40,7 +40,7 @@ struct ImageExportView: View {
     var body: some View {
         VStack(spacing: 18) {
             Image(systemName: "photo.on.rectangle")
-                .font(.system(size: 52))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
             Text("导出图片").font(.title2.bold())
             Text("把 PDF 每一页渲染成图片并保存到照片。")

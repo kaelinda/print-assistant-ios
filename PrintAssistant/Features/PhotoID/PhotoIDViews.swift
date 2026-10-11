@@ -11,7 +11,7 @@ struct PhotoIDSourceView: View {
     var body: some View {
         VStack(spacing: 18) {
             Image(systemName: "person.crop.rectangle")
-                .font(.system(size: 54))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
             Text("证件照来源").font(.title2.bold())
             Text("选择一张照片，裁剪成 1 寸证件照并排版到 A4。")
@@ -128,7 +128,7 @@ struct PhotoIDGeneratingView: View {
             Spacer()
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                 Text("证件照生成失败").font(.title2.bold())
                 Text(errorMessage).multilineTextAlignment(.center).foregroundStyle(.secondary)
@@ -182,7 +182,7 @@ struct PhotoIDSuccessView: View {
             VStack(spacing: 18) {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("证件照已生成").font(.title2.bold())
                 Text("A4 · 6 张 · 文件已保存到本机").foregroundStyle(.secondary)

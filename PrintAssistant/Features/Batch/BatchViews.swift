@@ -105,7 +105,7 @@ struct BatchProcessingView: View {
             Spacer()
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                 Text("批量处理失败").font(.title2.bold())
                 Text(errorMessage).multilineTextAlignment(.center).foregroundStyle(.secondary)
@@ -214,7 +214,7 @@ struct BatchSuccessView: View {
         ScrollView {
             VStack(spacing: 18) {
                 Image(systemName: job.succeededIDs.isEmpty ? "exclamationmark.circle" : "checkmark.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(job.succeededIDs.isEmpty ? DesignTokens.Color.warning : DesignTokens.Color.success)
                 Text(job.isCancelled ? "批量处理已取消" : "批量处理完成")
                     .font(.title2.bold())

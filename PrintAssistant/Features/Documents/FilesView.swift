@@ -38,19 +38,19 @@ struct FilesView: View {
     private var titleRow: some View {
         HStack {
             Text("文件")
-                .font(.system(size: 34, weight: .bold))
+                .font(.largeTitle.bold())
                 .foregroundStyle(DesignTokens.Color.primaryText)
             Spacer()
             GlassIconButton {
                 appModel.push(.scanner)
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 21, weight: .medium))
+                    .font(.title2)
                     .foregroundStyle(DesignTokens.Color.primaryText)
             }
             .accessibilityLabel("添加文件")
         }
-        .frame(height: 52)
+        .frame(minHeight: 52)
     }
 
     private var filterRow: some View {
@@ -80,22 +80,22 @@ struct FilesView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: document.source == .photos ? "photo" : "doc.text")
-                                        .font(.system(size: 17, weight: .medium))
+                                        .font(.body.weight(.medium))
                                         .foregroundStyle(DesignTokens.Color.accent)
                                         .frame(width: 36, height: 36)
                                         .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 10))
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(document.name)
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.subheadline.weight(.medium))
                                             .foregroundStyle(DesignTokens.Color.primaryText)
                                             .lineLimit(1)
                                         Text("\(document.pageCount) 页 · \(document.byteCount.formatted(.byteCount(style: .file)))")
-                                            .font(.system(size: 11))
+                                            .font(.caption)
                                             .foregroundStyle(DesignTokens.Color.secondaryText)
                                     }
                                     Spacer()
                                     Image(systemName: "chevron.right")
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(.caption.weight(.semibold))
                                         .foregroundStyle(DesignTokens.Color.tertiaryText)
                                 }
                                 .padding(.horizontal, 16)
@@ -118,15 +118,15 @@ struct FilesView: View {
         GlassCard(cornerRadius: 22) {
             VStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 28, weight: .medium))
+                    .font(.title2)
                     .foregroundStyle(DesignTokens.Color.accent)
-                    .frame(width: 64, height: 64)
+                    .frame(minWidth: 64, minHeight: 64)
                     .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 20))
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(DesignTokens.Color.primaryText)
                 Text(message)
-                    .font(.system(size: 12))
+                    .font(.footnote)
                     .foregroundStyle(DesignTokens.Color.secondaryText)
                     .multilineTextAlignment(.center)
             }

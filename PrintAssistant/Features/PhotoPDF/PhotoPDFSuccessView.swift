@@ -11,7 +11,7 @@ struct PhotoPDFSuccessView: View {
                     Spacer()
 
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 64))
+                        .font(.largeTitle)
                         .foregroundStyle(DesignTokens.Color.success)
                         .accessibilityHidden(true)
 

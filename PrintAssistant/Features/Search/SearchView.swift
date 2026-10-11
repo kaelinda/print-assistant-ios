@@ -8,9 +8,9 @@ struct SearchView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
                 Text("搜索")
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(DesignTokens.Color.primaryText)
-                    .frame(height: 52, alignment: .leading)
+                    .frame(minHeight: 52, alignment: .leading)
 
                 GlassSearchField(text: $query, prompt: "搜索 PDF、扫描件和 OCR 文字")
 
@@ -38,7 +38,7 @@ struct SearchView: View {
                 Button("清除") {
                     appModel.transientMessage = "最近搜索已清除"
                 }
-                .font(.system(size: 12))
+                .font(.footnote)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .buttonStyle(.plain)
             }
@@ -62,16 +62,16 @@ struct SearchView: View {
     private var indexStatusCard: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(DesignTokens.Color.accent)
                 .frame(width: 36, height: 36)
-                .background(.white.opacity(0.64), in: Circle())
+                .background(DesignTokens.Color.cardFill, in: Circle())
             VStack(alignment: .leading, spacing: 3) {
                 Text("本地索引已更新")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(DesignTokens.Color.primaryText)
                 Text("\(appModel.library.documents.count) 个文件 · 本地搜索，不上传原文件")
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(DesignTokens.Color.secondaryText)
             }
             Spacer()
@@ -99,21 +99,21 @@ struct SearchView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(DesignTokens.Color.accent)
                     .frame(width: 36, height: 36)
                     .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 10))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(name)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(DesignTokens.Color.primaryText)
                     Text(detail)
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(DesignTokens.Color.secondaryText)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(DesignTokens.Color.tertiaryText)
             }
             .padding(.horizontal, 16)
@@ -125,15 +125,15 @@ struct SearchView: View {
     private var noResultsContent: some View {
         VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 28, weight: .medium))
+                .font(.title2)
                 .foregroundStyle(DesignTokens.Color.accent)
-                .frame(width: 64, height: 64)
+                .frame(minWidth: 64, minHeight: 64)
                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 20))
             Text("没有找到匹配文件")
-                .font(.system(size: 17, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(DesignTokens.Color.primaryText)
             Text("试试文件名或 OCR 正文中的其他关键词。")
-                .font(.system(size: 12))
+                .font(.footnote)
                 .foregroundStyle(DesignTokens.Color.secondaryText)
         }
         .frame(maxWidth: .infinity)
@@ -151,22 +151,22 @@ struct SearchView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "doc.text")
-                                    .font(.system(size: 17, weight: .medium))
+                                    .font(.body.weight(.medium))
                                     .foregroundStyle(DesignTokens.Color.accent)
                                     .frame(width: 36, height: 36)
                                     .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 10))
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(document.name)
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.subheadline.weight(.medium))
                                         .foregroundStyle(DesignTokens.Color.primaryText)
                                     Text(document.searchableText.map { String($0.prefix(28)) } ?? "PDF 文档")
-                                        .font(.system(size: 11))
+                                        .font(.caption)
                                         .foregroundStyle(DesignTokens.Color.secondaryText)
                                         .lineLimit(1)
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.caption.weight(.semibold))
                                     .foregroundStyle(DesignTokens.Color.tertiaryText)
                             }
                             .padding(.horizontal, 16)

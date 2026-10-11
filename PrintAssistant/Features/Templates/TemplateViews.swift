@@ -14,7 +14,7 @@ struct TemplateCenterView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("打印模板")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.bold())
                     .foregroundStyle(DesignTokens.Color.primaryText)
                 Text("把重复使用的打印参数保存下来，下次一键套用")
                     .font(.subheadline)
@@ -36,15 +36,15 @@ struct TemplateCenterView: View {
                     } label: {
                         HStack(spacing: 14) {
                             Text(template.category == .id ? "ID" : template.category == .photo ? "1IN" : "DOC")
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.caption2.weight(.medium))
                                 .foregroundStyle(DesignTokens.Color.accent)
                                 .frame(width: 46, height: 46)
                                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 13))
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(template.name)
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(.subheadline.weight(.semibold))
                                 Text(template.subtitle)
-                                    .font(.system(size: 12))
+                                    .font(.footnote)
                                     .foregroundStyle(DesignTokens.Color.secondaryText)
                             }
                             Spacer()
@@ -55,8 +55,8 @@ struct TemplateCenterView: View {
                         .frame(maxWidth: .infinity, minHeight: 86)
                     }
                     .buttonStyle(.plain)
-                    .background(.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 18))
-                    .overlay { RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.9), lineWidth: 1) }
+                    .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 18))
+                    .overlay { RoundedRectangle(cornerRadius: 18).stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                 }
 
                 Button {
@@ -130,7 +130,7 @@ struct TemplateApplyView: View {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(spacing: 12) {
                     Image(systemName: "checklist")
-                        .font(.system(size: 50))
+                        .font(.largeTitle)
                         .foregroundStyle(DesignTokens.Color.accent)
                     Text(template.name)
                         .font(.title2.bold())
@@ -179,7 +179,7 @@ struct TemplateApplyView: View {
                         }
                     }
                     .padding(.horizontal, 14)
-                    .background(.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 18))
+                    .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 18))
                 }
 
                 PrimaryActionButton(title: "从文件选择 PDF", state: .enabled) {

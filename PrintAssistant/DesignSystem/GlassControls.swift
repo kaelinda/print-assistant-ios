@@ -10,9 +10,9 @@ struct GlassSurface<Content: View>: View {
             .background(
                 LinearGradient(
                     colors: [
-                        .white.opacity(0.38),
-                        .white.opacity(0.12),
-                        Color(red: 217 / 255, green: 229 / 255, blue: 1).opacity(0.08)
+                        DesignTokens.Color.hairline.opacity(0.5),
+                        DesignTokens.Color.cardFill.opacity(0.4),
+                        DesignTokens.Color.stateSurface.opacity(0.35)
                     ],
                     startPoint: .bottomLeading,
                     endPoint: .topTrailing
@@ -21,9 +21,9 @@ struct GlassSurface<Content: View>: View {
             )
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(.white.opacity(0.78), lineWidth: 1)
+                    .stroke(DesignTokens.Color.hairline, lineWidth: 1)
             }
-            .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
+            .shadow(color: DesignTokens.Color.shadow, radius: 15, y: 10)
     }
 }
 
@@ -40,7 +40,7 @@ struct GlassIconButton<Label: View>: View {
         .buttonStyle(.plain)
         .background(.regularMaterial, in: Circle())
         .overlay {
-            Circle().stroke(.white.opacity(0.34), lineWidth: 0.75)
+            Circle().stroke(DesignTokens.Color.hairline, lineWidth: 0.75)
         }
         .shadow(color: .black.opacity(0.08), radius: 12, y: 6)
         .accessibilityAddTraits(.isButton)
@@ -58,10 +58,10 @@ struct GlassCard<Content: View>: View {
 
     var body: some View {
         content()
-            .background(.white.opacity(0.82), in: RoundedRectangle(cornerRadius: cornerRadius))
+            .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(.white.opacity(0.92), lineWidth: 1)
+                    .stroke(DesignTokens.Color.hairline, lineWidth: 1)
             }
     }
 }
@@ -73,10 +73,10 @@ struct GlassSearchField: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 18, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(DesignTokens.Color.primaryText)
             TextField(prompt, text: $text)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !text.isEmpty {
@@ -90,9 +90,9 @@ struct GlassSearchField: View {
             }
         }
         .padding(.horizontal, 16)
-        .frame(height: 48)
+        .frame(minHeight: 48)
         .background(.ultraThinMaterial, in: Capsule())
-        .overlay { Capsule().stroke(.white.opacity(0.78), lineWidth: 1) }
+        .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
         .shadow(color: Color.black.opacity(0.08), radius: 12, y: 7)
     }
 }
@@ -105,12 +105,13 @@ struct GlassChip: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                .font(.footnote.weight(isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? DesignTokens.Color.primaryText : DesignTokens.Color.secondaryText)
                 .padding(.horizontal, 16)
-                .frame(height: 36)
-                .background(isSelected ? .white.opacity(0.88) : .clear, in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(isSelected ? 0.92 : 0.65), lineWidth: 1) }
+                .padding(.vertical, 8)
+                .frame(minHeight: 36)
+                .background(isSelected ? DesignTokens.Color.cardFill : .clear, in: Capsule())
+                .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
         }
         .buttonStyle(.plain)
     }
@@ -127,28 +128,29 @@ struct GlassActionRow: View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(tint)
                     .frame(width: 40, height: 40)
                     .background(tint.opacity(0.13), in: RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(DesignTokens.Color.primaryText)
                     Text(subtitle)
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(DesignTokens.Color.secondaryText)
                         .lineLimit(1)
                 }
 
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(DesignTokens.Color.tertiaryText)
             }
             .padding(.horizontal, 16)
-            .frame(height: 72)
+            .padding(.vertical, 10)
+            .frame(minHeight: 72)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -167,7 +169,7 @@ struct GlassSectionHeader<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(DesignTokens.Color.primaryText)
             Spacer()
             trailing()
@@ -183,9 +185,10 @@ extension GlassSectionHeader where Trailing == EmptyView {
 
 struct GlassTabBar: View {
     @Environment(AppModel.self) private var appModel
+    @ScaledMetric(relativeTo: .title2) private var searchSide: CGFloat = 64
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             GlassSurface(cornerRadius: 32) {
                 HStack(spacing: 0) {
                     tab(.recent, title: "最近", systemImage: "clock")
@@ -193,7 +196,8 @@ struct GlassTabBar: View {
                     tab(.tools, title: "工具", systemImage: "slider.horizontal.3")
                 }
                 .padding(6)
-                .frame(width: 280, height: 64)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 64)
             }
 
             Button {
@@ -201,41 +205,46 @@ struct GlassTabBar: View {
                 appModel.popToRoot()
             } label: {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title2)
                     .foregroundStyle(DesignTokens.Color.primaryText)
-                    .frame(width: 64, height: 64)
+                    .frame(minWidth: searchSide, minHeight: searchSide)
             }
             .buttonStyle(.plain)
             .background(.ultraThinMaterial, in: Circle())
-            .overlay { Circle().stroke(.white.opacity(0.72), lineWidth: 1) }
-            .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.07), radius: 5, y: 3)
+            .overlay { Circle().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
+            .shadow(color: DesignTokens.Color.shadow, radius: 5, y: 3)
             .accessibilityLabel("搜索")
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 68)
+        .frame(minHeight: 68)
         .padding(.horizontal, 24)
     }
 
     @ViewBuilder
     private func tab(_ tab: AppModel.Tab, title: String, systemImage: String) -> some View {
+        let isSelected = appModel.selectedTab == tab
         Button {
             appModel.selectedTab = tab
             appModel.popToRoot()
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title2)
                 Text(title)
-                    .font(.system(size: 10, weight: appModel.selectedTab == tab ? .bold : .regular))
+                    .font(.caption2.weight(isSelected ? .bold : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .foregroundStyle(appModel.selectedTab == tab ? DesignTokens.Color.primaryText : DesignTokens.Color.tertiaryText)
-            .frame(width: 86, height: 52)
+            .foregroundStyle(isSelected ? DesignTokens.Color.primaryText : DesignTokens.Color.tertiaryText)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 52)
+            .padding(.vertical, 6)
             .background {
-                if appModel.selectedTab == tab {
+                if isSelected {
                     Capsule()
-                        .fill(.white.opacity(0.56))
-                        .overlay { Capsule().stroke(.white.opacity(0.72), lineWidth: 1) }
-                        .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.07), radius: 5, y: 3)
+                        .fill(DesignTokens.Color.selectedFill)
+                        .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
+                        .shadow(color: DesignTokens.Color.shadow, radius: 5, y: 3)
                 }
             }
         }
@@ -274,7 +283,7 @@ struct PrimaryActionButton: View {
             in: Capsule()
         )
         .overlay {
-            Capsule().stroke(.white.opacity(0.28), lineWidth: 0.75)
+            Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 0.75)
         }
         .disabled(state != .enabled)
         .animation(DesignTokens.Motion.fast, value: state)

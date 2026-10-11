@@ -13,7 +13,7 @@ struct OCRProcessingView: View {
 
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                     .accessibilityHidden(true)
 
