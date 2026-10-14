@@ -15,7 +15,7 @@ struct PDFMergeProcessingView: View {
 
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                     .accessibilityHidden(true)
 
@@ -66,25 +66,29 @@ struct PDFMergeProcessingView: View {
     @MainActor
     private func merge() async {
         do {
-            let filename = "合并文件-\(Int(Date.now.timeIntervalSince1970)).pdf"
-            let url = try await appModel.pdfOperationService.merge(
-                urls: draft.sources.map(\.url),
-                filename: filename
-            )
-            let document = try requireDocument(url)
-            let values = try url.resourceValues(forKeys: [.fileSizeKey])
-            let record = DocumentRecord(
-                name: filename,
-                pageCount: document.pageCount,
-                byteCount: Int64(values.fileSize ?? 0),
-                source: .generated,
-                localURL: url
-            )
-
-            try appModel.library.add(record)
+            let record = try await appModel.runExclusive { () -> DocumentRecord in
+                let filename = "\(String(localized: "合并文件"))-\(UUID().uuidString).pdf"
+                let url = try await appModel.pdfOperationService.merge(
+                    urls: draft.sources.map(\.url),
+                    filename: filename
+                )
+                let document = try requireDocument(url)
+                let values = try url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: filename,
+                    pageCount: document.pageCount,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .generated,
+                    localURL: url
+                )
+                try appModel.library.add(record)
+                return record
+            }
             appModel.pdfImportService.cleanup(draft.sources)
             completed = true
             appModel.replaceTop(with: .pdfMergeSuccess(record.id))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }

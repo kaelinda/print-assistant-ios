@@ -84,10 +84,10 @@ struct AppRootView: View {
                     TemplateApplyView(template: template)
                 case .batchSelection:
                     BatchSelectionView()
-                case .batchProcessing(let ids):
-                    BatchProcessingView(documentIDs: ids)
-                case .batchSuccess(let ids):
-                    BatchSuccessView(documentIDs: ids)
+                case .batchProcessing(let job):
+                    BatchProcessingView(job: job)
+                case .batchSuccess(let job):
+                    BatchSuccessView(job: job)
                 case .pdfCompressionSource:
                     PDFCompressionSourceView()
                 case .pdfCompressionProcessing(let source):
@@ -100,16 +100,16 @@ struct AppRootView: View {
                     PDFProtectionView(source: source)
                 case .pdfProtectionSuccess(let id):
                     PDFProtectionSuccessView(documentID: id)
-                case .pdfUtility(let mode):
-                    PDFUtilityView(mode: mode)
+                case .pdfUtility(let mode, let documentID):
+                    PDFUtilityView(mode: mode, preselectedDocumentID: documentID)
                 case .photoIDSource:
                     PhotoIDSourceView()
                 case .photoIDCrop(let draft):
                     PhotoIDCropView(draft: draft)
                 case .photoIDGenerating(let draft):
                     PhotoIDGeneratingView(draft: draft)
-                case .photoIDSuccess(let id):
-                    PhotoIDSuccessView(documentID: id)
+                case .photoIDSuccess(let id, let sheetCount):
+                    PhotoIDSuccessView(documentID: id, sheetCount: sheetCount)
                 case .imageExport(let id):
                     ImageExportView(documentID: id)
                 case .settings:
@@ -132,7 +132,12 @@ struct AppRootView: View {
                     .background(.regularMaterial, in: Capsule())
                     .padding(.bottom, 72)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .accessibilityIdentifier("transient-message")
             }
+        }
+        .onChange(of: appModel.transientMessage) { _, message in
+            guard let message, !message.isEmpty else { return }
+            AccessibilityNotification.Announcement(message).post()
         }
     }
 

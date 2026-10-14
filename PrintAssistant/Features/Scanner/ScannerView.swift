@@ -10,7 +10,7 @@ struct ScannerView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Spacer()
             Image(systemName: "doc.viewfinder")
-                .font(.system(size: 58))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .accessibilityHidden(true)
             VStack(spacing: DesignTokens.Spacing.xs) {
@@ -45,6 +45,6 @@ struct ScannerView: View {
         }
         .alert("无法扫描", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 }

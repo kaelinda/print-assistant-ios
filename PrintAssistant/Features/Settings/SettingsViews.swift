@@ -34,10 +34,12 @@ struct SettingsView: View {
         }
         .confirmationDialog("清除本地文字索引？", isPresented: $showingClearIndex, titleVisibility: .visible) {
             Button("清除索引", role: .destructive) {
-                for document in appModel.library.documents {
-                    try? appModel.library.updateSearchableText(id: document.id, text: nil)
+                do {
+                    try appModel.library.clearSearchableText()
+                    appModel.transientMessage = String(localized: "文字索引已清除")
+                } catch {
+                    appModel.transientMessage = error.localizedDescription
                 }
-                appModel.transientMessage = "文字索引已清除"
             }
             Button("取消", role: .cancel) {}
         } message: {
@@ -82,8 +84,13 @@ struct PrivacyPolicyView: View {
 
 struct FeedbackView: View {
     @Environment(AppModel.self) private var appModel
+    @Environment(\.openURL) private var openURL
     @State private var message = ""
     @State private var sent = false
+
+    private var trimmedMessage: String {
+        message.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -92,12 +99,11 @@ struct FeedbackView: View {
             TextEditor(text: $message)
                 .frame(minHeight: 180)
                 .padding(8)
-                .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 16))
-            PrimaryActionButton(title: sent ? "已发送" : "发送反馈", state: message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || sent ? .disabled : .enabled) {
-                sent = true
-                appModel.transientMessage = "感谢你的反馈"
+                .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 16))
+            PrimaryActionButton(title: sent ? "已打开邮件" : "发送反馈", state: trimmedMessage.isEmpty || sent ? .disabled : .enabled) {
+                sendFeedback()
             }
-            Text("反馈只会在你点击发送后交给系统邮件或反馈渠道处理。")
+            Text("发送会打开系统邮件，并带上主题「打印助手反馈」。只有邮件应用打开后才会记为已发送。")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Spacer()
@@ -106,5 +112,22 @@ struct FeedbackView: View {
         .background(DesignTokens.Color.canvas)
         .navigationTitle("意见反馈")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func sendFeedback() {
+        guard let url = FeedbackMail.mailtoURL(body: trimmedMessage) else {
+            appModel.transientMessage = String(localized: "无法打开邮件")
+            return
+        }
+        openURL(url) { accepted in
+            Task { @MainActor in
+                if accepted {
+                    sent = true
+                    appModel.transientMessage = String(localized: "已打开邮件，请在邮件中发送反馈")
+                } else {
+                    appModel.transientMessage = String(localized: "没有可用的邮件应用")
+                }
+            }
+        }
     }
 }

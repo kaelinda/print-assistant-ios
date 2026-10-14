@@ -15,7 +15,7 @@ struct FilesView: View {
                 filterRow
 
                 if let error = appModel.library.persistenceError, appModel.library.documents.isEmpty {
-                    emptyCard(title: "无法读取文件库", message: error, icon: "exclamationmark.triangle")
+                    emptyCard(title: "无法读取文件库", message: LocalizedStringKey(stringLiteral: error), icon: "exclamationmark.triangle")
                 } else if visibleDocuments.isEmpty {
                     emptyCard(
                         title: source == .all ? "还没有文件" : "没有符合条件的文件",
@@ -38,28 +38,29 @@ struct FilesView: View {
     private var titleRow: some View {
         HStack {
             Text("文件")
-                .font(.system(size: 34, weight: .bold))
+                .font(.largeTitle.bold())
                 .foregroundStyle(DesignTokens.Color.primaryText)
             Spacer()
             GlassIconButton {
                 appModel.push(.scanner)
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 21, weight: .medium))
+                    .font(.title2)
                     .foregroundStyle(DesignTokens.Color.primaryText)
             }
             .accessibilityLabel("添加文件")
         }
-        .frame(height: 52)
+        .frame(minHeight: 52)
     }
 
     private var filterRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 GlassChip(title: "最近", isSelected: source == .all) { source = .all }
-                GlassChip(title: "PDF", isSelected: source == .generated) { source = .generated }
+                GlassChip(title: "PDF", isSelected: source == .pdf) { source = .pdf }
                 GlassChip(title: "扫描件", isSelected: source == .scan) { source = .scan }
                 GlassChip(title: "图片", isSelected: source == .photos) { source = .photos }
+                GlassChip(title: "导入", isSelected: source == .files) { source = .files }
             }
         }
         .scrollClipDisabled()
@@ -68,7 +69,7 @@ struct FilesView: View {
     private var groupedDocumentList: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(groups, id: \.title) { group in
-                GlassSectionHeader(group.title)
+                GlassSectionHeader(LocalizedStringKey(stringLiteral: group.title))
                     .padding(.top, 4)
 
                 GlassCard(cornerRadius: 20) {
@@ -79,22 +80,22 @@ struct FilesView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: document.source == .photos ? "photo" : "doc.text")
-                                        .font(.system(size: 17, weight: .medium))
+                                        .font(.body.weight(.medium))
                                         .foregroundStyle(DesignTokens.Color.accent)
                                         .frame(width: 36, height: 36)
                                         .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 10))
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(document.name)
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.subheadline.weight(.medium))
                                             .foregroundStyle(DesignTokens.Color.primaryText)
                                             .lineLimit(1)
                                         Text("\(document.pageCount) 页 · \(document.byteCount.formatted(.byteCount(style: .file)))")
-                                            .font(.system(size: 11))
+                                            .font(.caption)
                                             .foregroundStyle(DesignTokens.Color.secondaryText)
                                     }
                                     Spacer()
                                     Image(systemName: "chevron.right")
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(.caption.weight(.semibold))
                                         .foregroundStyle(DesignTokens.Color.tertiaryText)
                                 }
                                 .padding(.horizontal, 16)
@@ -113,19 +114,19 @@ struct FilesView: View {
         }
     }
 
-    private func emptyCard(title: String, message: String, icon: String) -> some View {
+    private func emptyCard(title: LocalizedStringKey, message: LocalizedStringKey, icon: String) -> some View {
         GlassCard(cornerRadius: 22) {
             VStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 28, weight: .medium))
+                    .font(.title2)
                     .foregroundStyle(DesignTokens.Color.accent)
-                    .frame(width: 64, height: 64)
+                    .frame(minWidth: 64, minHeight: 64)
                     .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 20))
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(DesignTokens.Color.primaryText)
                 Text(message)
-                    .font(.system(size: 12))
+                    .font(.footnote)
                     .foregroundStyle(DesignTokens.Color.secondaryText)
                     .multilineTextAlignment(.center)
             }

@@ -15,15 +15,15 @@ struct PDFOperationService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .insufficientInputs: "至少需要两个 PDF 文件。"
-            case .unreadablePDF: "PDF 文件无法读取或已经损坏。"
-            case .lockedPDF: "PDF 已受密码保护，当前无法处理。"
-            case .invalidRange: "拆分页码范围无效。"
-            case .invalidPageSelection: "页面选择包含不存在的页码。"
-            case .emptyOutput: "操作后不能生成空 PDF。"
-            case .unableToCopyPage: "无法复制 PDF 页面。"
-            case .unableToWrite: "无法写入 PDF 结果。"
-            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
+            case .insufficientInputs: String(localized: "至少需要两个 PDF 文件。")
+            case .unreadablePDF: String(localized: "PDF 文件无法读取或已经损坏。")
+            case .lockedPDF: String(localized: "PDF 已受密码保护，当前无法处理。")
+            case .invalidRange: String(localized: "拆分页码范围无效。")
+            case .invalidPageSelection: String(localized: "页面选择包含不存在的页码。")
+            case .emptyOutput: String(localized: "操作后不能生成空 PDF。")
+            case .unableToCopyPage: String(localized: "无法复制 PDF 页面。")
+            case .unableToWrite: String(localized: "无法写入 PDF 结果。")
+            case .outputConflictsWithSource: String(localized: "输出文件不能覆盖源 PDF。")
             }
         }
     }
@@ -38,13 +38,15 @@ struct PDFOperationService: Sendable {
         guard urls.count >= 2 else { throw OperationError.insufficientInputs }
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
             let output = PDFDocument()
             var insertionIndex = 0
 
             for url in urls {
+                try Task.checkCancellation()
                 let source = try Self.open(url)
                 for pageIndex in 0..<source.pageCount {
+                    try Task.checkCancellation()
                     let page = try Self.copyPage(from: source, index: pageIndex)
                     output.insert(page, at: insertionIndex)
                     insertionIndex += 1
@@ -59,7 +61,12 @@ struct PDFOperationService: Sendable {
                 directory: directory,
                 protectedInputs: urls
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     func split(
@@ -207,12 +214,6 @@ struct PDFOperationService: Sendable {
     }
 
     private static func defaultOutputDirectory() throws -> URL {
-        let base = try FileManager.default.url(
-            for: .documentDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        return base.appending(path: "Documents", directoryHint: .isDirectory)
+        LibraryPaths.filesDirectory()
     }
 }

@@ -77,7 +77,7 @@ struct OCRSourceView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(importError ?? "未知错误")
+            Text(importError ?? String(localized: "未知错误"))
         }
     }
 
@@ -94,9 +94,8 @@ struct OCRSourceView: View {
                 throw CocoaError(.fileReadCorruptFile)
             }
             appModel.push(.ocrProcessing(.init(
-                data: data,
-                kind: .image,
-                displayName: "照片"
+                imageData: data,
+                displayName: String(localized: "照片")
             )))
         } catch {
             importError = error.localizedDescription
@@ -104,23 +103,39 @@ struct OCRSourceView: View {
     }
 
     private func handleFileImport(_ result: Result<[URL], Error>) {
+        let access: SecurityScopedAccess
         do {
-            guard let url = try result.get().first else { return }
-            let accessed = url.startAccessingSecurityScopedResource()
-            defer {
-                if accessed { url.stopAccessingSecurityScopedResource() }
-            }
-
-            let data = try Data(contentsOf: url)
-            let kind: OCRInput.Kind = url.pathExtension.lowercased() == "pdf" ? .pdf : .image
-
-            appModel.push(.ocrProcessing(.init(
-                data: data,
-                kind: kind,
-                displayName: url.lastPathComponent
-            )))
+            access = try SecurityScopedAccess(result: result)
         } catch {
-            importError = error.localizedDescription
+            let message = error.localizedDescription
+            Task { @MainActor in
+                importError = message
+            }
+            return
+        }
+
+        Task { @MainActor in
+            defer { access.stop() }
+            isLoadingSelection = true
+            defer { isLoadingSelection = false }
+            do {
+                let files = try await appModel.pdfImportService.copyIntoLibrary(urls: access.urls)
+                guard let file = files.first else { return }
+                let isPDF = file.url.pathExtension.lowercased() == "pdf"
+                if isPDF {
+                    appModel.push(.ocrProcessing(.init(
+                        pdfURL: file.url,
+                        displayName: file.displayName
+                    )))
+                } else {
+                    appModel.push(.ocrProcessing(.init(
+                        imageFile: file.url,
+                        displayName: file.displayName
+                    )))
+                }
+            } catch {
+                importError = error.localizedDescription
+            }
         }
     }
 }

@@ -56,20 +56,28 @@ struct PDFPageSourceView: View {
         }
         .navigationTitle("页面管理")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(
+        .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
-            allowsMultipleSelection: false
-        ) { result in
-            stage(result)
-        }
+            importer: appModel.pdfImportService,
+            onStart: { isStaging = true },
+            onFailure: { message in
+                isStaging = false
+                errorMessage = message
+            },
+            onFiles: { imported in
+                isStaging = false
+                guard let source = imported.first else { return }
+                open(source)
+            }
+        )
         .alert("无法读取 PDF", isPresented: .init(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 
@@ -92,18 +100,4 @@ struct PDFPageSourceView: View {
         )))
     }
 
-    private func stage(_ result: Result<[URL], Error>) {
-        Task {
-            do {
-                isStaging = true
-                let imported = try await appModel.pdfImportService.stage(urls: try result.get())
-                isStaging = false
-                guard let source = imported.first else { return }
-                open(source)
-            } catch {
-                isStaging = false
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
 }

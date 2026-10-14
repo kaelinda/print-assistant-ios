@@ -15,7 +15,7 @@ struct PDFPageProcessingView: View {
 
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                     .accessibilityHidden(true)
                 Text("页面处理失败")
@@ -60,7 +60,7 @@ struct PDFPageProcessingView: View {
     @MainActor
     private func generate() async {
         do {
-            let filename = "页面调整-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "页面调整"))
             let url = try await appModel.pdfOperationService.applyPagePlan(
                 .init(sourceURL: draft.source.url, pageIndexes: draft.pageIndexes),
                 filename: filename

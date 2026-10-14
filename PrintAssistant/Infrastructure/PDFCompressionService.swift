@@ -11,11 +11,11 @@ struct PDFCompressionService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .unreadablePDF: "PDF 文件无法读取或已经损坏。"
-            case .lockedPDF: "受密码保护的 PDF 需要先解锁。"
-            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
-            case .unableToWrite: "无法写入压缩后的 PDF。"
-            case .noMeaningfulSavings: "这个 PDF 已经比较紧凑，没有可观的压缩空间。"
+            case .unreadablePDF: String(localized: "PDF 文件无法读取或已经损坏。")
+            case .lockedPDF: String(localized: "受密码保护的 PDF 需要先解锁。")
+            case .outputConflictsWithSource: String(localized: "输出文件不能覆盖源 PDF。")
+            case .unableToWrite: String(localized: "无法写入压缩后的 PDF。")
+            case .noMeaningfulSavings: String(localized: "这个 PDF 已经比较紧凑，没有可观的压缩空间。")
             }
         }
     }
@@ -44,7 +44,8 @@ struct PDFCompressionService: Sendable {
     func compress(sourceURL: URL, filename: String) async throws -> Result {
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) { () throws -> Result in
+            try Task.checkCancellation()
             guard let document = PDFDocument(url: sourceURL), document.pageCount > 0 else {
                 throw CompressionError.unreadablePDF
             }
@@ -52,18 +53,7 @@ struct PDFCompressionService: Sendable {
                 throw CompressionError.lockedPDF
             }
 
-            let root: URL
-            if let directory {
-                root = directory
-            } else {
-                let base = try FileManager.default.url(
-                    for: .documentDirectory,
-                    in: .userDomainMask,
-                    appropriateFor: nil,
-                    create: true
-                )
-                root = base.appending(path: "Documents", directoryHint: .isDirectory)
-            }
+            let root = directory ?? LibraryPaths.filesDirectory()
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
 
             let output = root.appending(path: filename, directoryHint: .notDirectory)
@@ -115,6 +105,11 @@ struct PDFCompressionService: Sendable {
                 originalBytes: originalBytes,
                 compressedBytes: compressedBytes
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 }

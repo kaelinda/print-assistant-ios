@@ -16,26 +16,27 @@ struct ToolsView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text("工具")
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(DesignTokens.Color.primaryText)
                     Spacer()
                     GlassIconButton {
                         appModel.push(.settings)
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundStyle(DesignTokens.Color.primaryText)
                     }
                     .accessibilityLabel("更多工具")
+                    .accessibilityIdentifier("open-settings")
                 }
-                .frame(height: 52)
+                .frame(minHeight: 52)
 
                 toolSection(title: "文档", rows: [
                     ToolDefinition(title: "PDF 工具箱", subtitle: "合并、拆分、提取页面", systemImage: "doc.on.doc", tint: DesignTokens.Color.accent) { appModel.push(.pdfPageSource) },
                     ToolDefinition(title: "批量处理", subtitle: "一次处理多个文件", systemImage: "square.stack.3d.up", tint: DesignTokens.Color.warning) { appModel.push(.batchSelection) },
-                    ToolDefinition(title: "压缩 PDF", subtitle: "减小文件体积，保留页面", systemImage: "doc.zipper", tint: DesignTokens.Color.accent) { appModel.push(.pdfUtility(.compress)) },
-                    ToolDefinition(title: "保护 PDF", subtitle: "设置密码，生成受保护副本", systemImage: "lock.doc", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.protect)) },
-                    ToolDefinition(title: "解除 PDF 密码", subtitle: "使用正确密码生成未加密副本", systemImage: "lock.open", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.unlock)) },
+                    ToolDefinition(title: "压缩 PDF", subtitle: "减小文件体积，保留页面", systemImage: "doc.zipper", tint: DesignTokens.Color.accent) { appModel.push(.pdfUtility(.compress, nil)) },
+                    ToolDefinition(title: "保护 PDF", subtitle: "设置密码，生成受保护副本", systemImage: "lock.doc", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.protect, nil)) },
+                    ToolDefinition(title: "解除 PDF 密码", subtitle: "使用正确密码生成未加密副本", systemImage: "lock.open", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.unlock, nil)) },
                     ToolDefinition(title: "文字识别", subtitle: "从图片或 PDF 提取文字", systemImage: "text.viewfinder", tint: DesignTokens.Color.success) { appModel.push(.ocrSource) }
                 ])
 
@@ -60,7 +61,7 @@ struct ToolsView: View {
     }
 
     private func toolSection(
-        title: String,
+        title: LocalizedStringKey,
         rows: [ToolDefinition]
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -69,8 +70,8 @@ struct ToolsView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                         GlassActionRow(
-                            title: row.title,
-                            subtitle: row.subtitle,
+                            title: LocalizedStringKey(stringLiteral: row.title),
+                            subtitle: LocalizedStringKey(stringLiteral: row.subtitle),
                             systemImage: row.systemImage,
                             tint: row.tint,
                             action: row.action

@@ -10,8 +10,6 @@ struct FileDetailView: View {
     @State private var renameText = ""
     @State private var isConfirmingDelete = false
     @State private var operationError: String?
-    @State private var isPreparingOCR = false
-
     var body: some View {
         Group {
             if let document = appModel.library.document(id: documentID) {
@@ -50,7 +48,7 @@ struct FileDetailView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             Button("解除 PDF 密码") {
-                                appModel.push(.pdfUtility(.unlock))
+                                appModel.push(.pdfUtility(.unlock, document.id))
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.large)
@@ -62,18 +60,11 @@ struct FileDetailView: View {
                             Button {
                                 prepareOCR(for: document)
                             } label: {
-                                HStack {
-                                    if isPreparingOCR {
-                                        ProgressView()
-                                    } else {
-                                        Image(systemName: "text.viewfinder")
-                                    }
-                                    Text(document.hasOCRText ? "重新识别文字" : "识别文字")
-                                }
-                                .frame(maxWidth: .infinity, minHeight: 50)
+                                Label(document.hasOCRText ? "重新识别文字" : "识别文字", systemImage: "text.viewfinder")
+                                    .frame(maxWidth: .infinity, minHeight: 50)
                             }
                             .buttonStyle(.bordered)
-                            .disabled(isPreparingOCR)
+                            .disabled(appModel.isWorking)
 
                             Button {
                                 appModel.push(.imageExport(document.id))
@@ -130,45 +121,47 @@ struct FileDetailView: View {
                 ContentUnavailableView("文件不存在", systemImage: "doc.badge.exclamationmark")
             }
         }
+        .task(id: documentID) {
+            await refreshLockState()
+        }
         .alert("无法完成操作", isPresented: .init(
             get: { operationError != nil },
             set: { if !$0 { operationError = nil } }
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(operationError ?? "未知错误")
+            Text(operationError ?? String(localized: "未知错误"))
         }
     }
 
+    private func refreshLockState() async {
+        guard let document = appModel.library.document(id: documentID) else { return }
+        let locked = PDFFileInspection.inspect(url: document.localURL)?.isLocked ?? false
+        guard locked != document.isPasswordProtected else { return }
+        try? appModel.library.setPasswordProtection(id: document.id, isProtected: locked)
+    }
+
     private func prepareOCR(for document: DocumentRecord) {
-        guard !isPreparingOCR else { return }
-        isPreparingOCR = true
-
-        Task {
-            do {
-                let url = document.localURL
-                let data = try await Task.detached(priority: .userInitiated) {
-                    try Data(contentsOf: url)
-                }.value
-
-                isPreparingOCR = false
-                appModel.push(.ocrProcessing(.init(
-                    data: data,
-                    kind: .pdf,
-                    displayName: document.name,
-                    associatedDocumentID: document.id
-                )))
-            } catch {
-                isPreparingOCR = false
-                operationError = error.localizedDescription
-            }
+        guard FileManager.default.fileExists(atPath: document.localURL.path) else {
+            operationError = DocumentLibrary.LibraryError.missingDocument.localizedDescription
+            return
         }
+        if document.isPasswordProtected || PDFFileInspection.inspect(url: document.localURL)?.isLocked == true {
+            try? appModel.library.setPasswordProtection(id: document.id, isProtected: true)
+            operationError = PDFOperationService.OperationError.lockedPDF.localizedDescription
+            return
+        }
+        appModel.push(.ocrProcessing(.init(
+            pdfURL: document.localURL,
+            displayName: document.name,
+            associatedDocumentID: document.id
+        )))
     }
 
     private func rename() {
         do {
             try appModel.library.rename(id: documentID, to: renameText)
-            appModel.transientMessage = "已重命名"
+            appModel.transientMessage = String(localized: "已重命名")
         } catch {
             operationError = error.localizedDescription
         }
@@ -178,7 +171,7 @@ struct FileDetailView: View {
         do {
             try appModel.library.delete(id: documentID)
             dismiss()
-            appModel.transientMessage = "文件已删除"
+            appModel.transientMessage = String(localized: "文件已删除")
         } catch {
             operationError = error.localizedDescription
         }
@@ -186,10 +179,10 @@ struct FileDetailView: View {
 
     private func sourceName(_ source: DocumentRecord.Source) -> String {
         switch source {
-        case .scan: "扫描"
-        case .photos: "照片"
-        case .files: "文件"
-        case .generated: "生成"
+        case .scan: String(localized: "扫描")
+        case .photos: String(localized: "照片")
+        case .files: String(localized: "导入")
+        case .generated: String(localized: "生成")
         }
     }
 }

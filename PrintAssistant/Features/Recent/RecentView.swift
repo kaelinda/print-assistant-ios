@@ -1,31 +1,34 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct RecentView: View {
     @Environment(AppModel.self) private var appModel
+    @State private var isImporting = false
+    @State private var errorMessage: String?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 HStack {
                     Text("最近")
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(DesignTokens.Color.primaryText)
 
                     Spacer()
 
                     Button { appModel.push(.scanner) } label: {
                         Image(systemName: "doc.viewfinder")
-                            .font(.system(size: 22, weight: .medium))
+                            .font(.title2)
                             .foregroundStyle(DesignTokens.Color.primaryText)
                             .frame(width: 46, height: 46)
                     }
                     .buttonStyle(.plain)
                     .background(.ultraThinMaterial, in: Circle())
-                    .overlay { Circle().stroke(.white.opacity(0.78), lineWidth: 1) }
+                    .overlay { Circle().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                     .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
                     .accessibilityLabel("扫描文档")
                 }
-                .frame(height: 52)
+                .frame(minHeight: 52)
 
                 Button {
                     appModel.selectedTab = .search
@@ -33,10 +36,10 @@ struct RecentView: View {
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.xs) {
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 20, weight: .medium))
+                            .font(.title3)
                             .foregroundStyle(DesignTokens.Color.primaryText)
                         Text("搜索文档与扫描文字")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundStyle(DesignTokens.Color.secondaryText)
                         Spacer()
                     }
@@ -45,7 +48,7 @@ struct RecentView: View {
                 }
                 .buttonStyle(.plain)
                 .background(.ultraThinMaterial, in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(0.78), lineWidth: 1) }
+                .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                 .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
                 .accessibilityLabel("搜索文档与扫描文字")
 
@@ -61,23 +64,67 @@ struct RecentView: View {
         }
         .background(DesignTokens.Color.canvas)
         .toolbar(.hidden, for: .navigationBar)
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            allowsMultipleSelection: true,
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                importPickedFiles(sources)
+            }
+        )
+        .alert("无法导入文件", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("好", role: .cancel) {}
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
+    }
+
+    private func importPickedFiles(_ sources: [PDFSourceItem]) {
+        do {
+            var added = 0
+            for source in sources {
+                guard let inspection = PDFFileInspection.inspect(url: source.url) else {
+                    appModel.pdfImportService.cleanup([source])
+                    continue
+                }
+                let values = try source.url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: source.displayName,
+                    pageCount: inspection.pageCount,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .files,
+                    localURL: source.url,
+                    isPasswordProtected: inspection.isLocked
+                )
+                try appModel.library.add(record)
+                added += 1
+            }
+            if added == 0 {
+                errorMessage = String(localized: "没有可导入的 PDF。")
+            } else {
+                appModel.transientMessage = String(localized: "已导入 \(added) 个文件")
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "doc.text")
-                .font(.system(size: 40, weight: .medium))
+                .font(.largeTitle)
                 .foregroundStyle(DesignTokens.Color.accent)
                 .frame(width: 88, height: 88)
                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 28))
 
             Text("还没有最近项目")
-                .font(.system(size: 20, weight: .medium))
+                .font(.title3)
                 .foregroundStyle(DesignTokens.Color.primaryText)
                 .frame(maxWidth: .infinity)
 
             Text("扫描、导入或把图片整理成 PDF 后，会显示在这里。")
-                .font(.system(size: 12))
+                .font(.footnote)
                 .foregroundStyle(DesignTokens.Color.secondaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -85,20 +132,20 @@ struct RecentView: View {
             Color.clear.frame(height: 4)
 
             Button("扫描文档") { appModel.push(.scanner) }
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white)
                 .frame(width: 216, height: 52)
                 .background(DesignTokens.Color.accent.opacity(0.95), in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(0.32), lineWidth: 1) }
+                .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
 
             Button("导入文件") {
-                appModel.transientMessage = "导入文件功能即将支持"
+                isImporting = true
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(.subheadline.weight(.medium))
             .foregroundStyle(DesignTokens.Color.primaryText)
             .frame(width: 216, height: 52)
             .background(.ultraThinMaterial, in: Capsule())
-            .overlay { Capsule().stroke(.white.opacity(0.72), lineWidth: 1) }
+            .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
             .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.08), radius: 9, y: 6)
         }
         .frame(maxWidth: .infinity)

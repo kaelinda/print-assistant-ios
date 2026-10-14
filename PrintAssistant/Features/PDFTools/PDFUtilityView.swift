@@ -9,33 +9,33 @@ enum PDFUtilityMode: Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .compress: "压缩 PDF"
-        case .protect: "加密 PDF"
-        case .unlock: "解除 PDF 密码"
+        case .compress: String(localized: "压缩 PDF")
+        case .protect: String(localized: "加密 PDF")
+        case .unlock: String(localized: "解除 PDF 密码")
         }
     }
 
     var actionTitle: String {
         switch self {
-        case .compress: "压缩并保存新文件"
-        case .protect: "加密并保存新文件"
-        case .unlock: "解密并保存新文件"
+        case .compress: String(localized: "压缩并保存新文件")
+        case .protect: String(localized: "加密并保存新文件")
+        case .unlock: String(localized: "解密并保存新文件")
         }
     }
 
     var successTitle: String {
         switch self {
-        case .compress: "PDF 压缩完成"
-        case .protect: "PDF 加密完成"
-        case .unlock: "PDF 解密完成"
+        case .compress: String(localized: "PDF 压缩完成")
+        case .protect: String(localized: "PDF 加密完成")
+        case .unlock: String(localized: "PDF 解密完成")
         }
     }
 
     var outputPrefix: String {
         switch self {
-        case .compress: "压缩文件"
-        case .protect: "加密文件"
-        case .unlock: "解密文件"
+        case .compress: String(localized: "压缩文件")
+        case .protect: String(localized: "加密文件")
+        case .unlock: String(localized: "解密文件")
         }
     }
 }
@@ -43,6 +43,7 @@ enum PDFUtilityMode: Hashable, Sendable {
 struct PDFUtilityView: View {
     @Environment(AppModel.self) private var appModel
     let mode: PDFUtilityMode
+    let preselectedDocumentID: DocumentRecord.ID?
 
     @State private var selected: PDFSourceItem?
     @State private var isImporting = false
@@ -79,7 +80,7 @@ struct PDFUtilityView: View {
                     Text(record.name)
                         .lineLimit(2)
                     if let savedFraction {
-                        Text("文件体积减少 \(Int((savedFraction * 100).rounded()))%")
+                        Text(verbatim: String(localized: "文件体积减少 \(savedFraction.formatted(.percent.precision(.fractionLength(0))))"))
                             .foregroundStyle(.secondary)
                     }
                     Text("新文件已保存到本机，原文件保持不变。")
@@ -192,7 +193,7 @@ struct PDFUtilityView: View {
                             ProgressView()
                                 .tint(.white)
                         }
-                        Text(isWorking ? "正在处理…" : mode.actionTitle)
+                        Text(verbatim: isWorking ? String(localized: "正在处理…") : mode.actionTitle)
                     }
                     .frame(maxWidth: .infinity, minHeight: 50)
                 }
@@ -205,13 +206,22 @@ struct PDFUtilityView: View {
         }
         .navigationTitle(mode.title)
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(
+        .onAppear(perform: applyPreselectedDocument)
+        .libraryFileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.pdf],
-            allowsMultipleSelection: false
-        ) { result in
-            stage(result)
-        }
+            importer: appModel.pdfImportService,
+            onStart: { isStaging = true },
+            onFailure: { message in
+                isStaging = false
+                errorMessage = message
+            },
+            onFiles: { items in
+                isStaging = false
+                guard let staged = items.first else { return }
+                choose(staged)
+            }
+        )
         .onDisappear {
             if let selected {
                 appModel.pdfImportService.cleanup([selected])
@@ -223,8 +233,16 @@ struct PDFUtilityView: View {
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
+    }
+
+    @MainActor
+    private func applyPreselectedDocument() {
+        guard selected == nil,
+              let id = preselectedDocumentID,
+              let document = appModel.library.document(id: id) else { return }
+        choose(.init(url: document.localURL, displayName: document.name))
     }
 
     @MainActor
@@ -235,21 +253,6 @@ struct PDFUtilityView: View {
         selected = source
         completedID = nil
         savedFraction = nil
-    }
-
-    private func stage(_ result: Result<[URL], Error>) {
-        Task { @MainActor in
-            isStaging = true
-            defer { isStaging = false }
-            do {
-                guard let url = try result.get().first else { return }
-                let items = try await appModel.pdfImportService.stage(urls: [url])
-                guard let staged = items.first else { return }
-                choose(staged)
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
     }
 
     @MainActor
@@ -264,10 +267,12 @@ struct PDFUtilityView: View {
             var compression: PDFCompressionService.Result?
             switch mode {
             case .compress:
-                let result = try await PDFCompressionService().compress(
-                    sourceURL: source.url,
-                    filename: filename
-                )
+                let result = try await appModel.runExclusive {
+                    try await PDFCompressionService().compress(
+                        sourceURL: source.url,
+                        filename: filename
+                    )
+                }
                 output = result.url
                 compression = result
             case .protect:

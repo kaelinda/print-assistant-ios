@@ -1,4 +1,3 @@
-import PDFKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -15,7 +14,7 @@ struct TemplateCenterView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("打印模板")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.bold())
                     .foregroundStyle(DesignTokens.Color.primaryText)
                 Text("把重复使用的打印参数保存下来，下次一键套用")
                     .font(.subheadline)
@@ -24,7 +23,7 @@ struct TemplateCenterView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(PrintTemplate.Category.allCases, id: \.self) { item in
-                            GlassChip(title: item.displayName, isSelected: category == item) {
+                            GlassChip(verbatim: item.displayName, isSelected: category == item) {
                                 category = item
                             }
                         }
@@ -36,16 +35,16 @@ struct TemplateCenterView: View {
                         appModel.push(.templateApply(template))
                     } label: {
                         HStack(spacing: 14) {
-                            Text(template.category == .id ? "ID" : template.category == .photo ? "1IN" : "DOC")
-                                .font(.system(size: 10, weight: .medium))
+                            Text(verbatim: AppCopy.templateBadge(template.category))
+                                .font(.caption2.weight(.medium))
                                 .foregroundStyle(DesignTokens.Color.accent)
                                 .frame(width: 46, height: 46)
                                 .background(DesignTokens.Color.stateSurface, in: RoundedRectangle(cornerRadius: 13))
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(template.name)
-                                    .font(.system(size: 15, weight: .semibold))
-                                Text(template.subtitle)
-                                    .font(.system(size: 12))
+                                Text(verbatim: AppCopy.templateTitle(template.name))
+                                    .font(.subheadline.weight(.semibold))
+                                Text(verbatim: AppCopy.templateSubtitle(template.subtitle))
+                                    .font(.footnote)
                                     .foregroundStyle(DesignTokens.Color.secondaryText)
                             }
                             Spacer()
@@ -56,8 +55,8 @@ struct TemplateCenterView: View {
                         .frame(maxWidth: .infinity, minHeight: 86)
                     }
                     .buttonStyle(.plain)
-                    .background(.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 18))
-                    .overlay { RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.9), lineWidth: 1) }
+                    .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 18))
+                    .overlay { RoundedRectangle(cornerRadius: 18).stroke(DesignTokens.Color.hairline, lineWidth: 1) }
                 }
 
                 Button {
@@ -102,14 +101,18 @@ struct TemplateEditorView: View {
             Section("打印参数") {
                 TextField("纸张", text: $template.paper)
                 TextField("缩放", text: $template.scale)
-                Stepper("边距 \(template.marginMillimeters) mm", value: $template.marginMillimeters, in: 0...50)
-                Stepper("份数 \(template.copies)", value: $template.copies, in: 1...99)
+                Stepper(value: $template.marginMillimeters, in: 0...50) {
+                    Text(verbatim: AppCopy.margin(template.marginMillimeters))
+                }
+                Stepper(value: $template.copies, in: 1...99) {
+                    Text(verbatim: AppCopy.copiesLabel(template.copies))
+                }
             }
             Section {
                 PrimaryActionButton(title: "保存模板", state: template.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .disabled : .enabled) {
                     TemplateStore.upsert(template)
                     appModel.popToRoot()
-                    appModel.transientMessage = "模板已保存"
+                    appModel.transientMessage = String(localized: "模板已保存")
                 }
             }
             .listRowInsets(.init())
@@ -131,11 +134,16 @@ struct TemplateApplyView: View {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(spacing: 12) {
                     Image(systemName: "checklist")
-                        .font(.system(size: 50))
+                        .font(.largeTitle)
                         .foregroundStyle(DesignTokens.Color.accent)
-                    Text(template.name)
+                    Text(verbatim: AppCopy.templateTitle(template.name))
                         .font(.title2.bold())
-                    Text("\(template.paper) · \(template.scale) · \(template.marginMillimeters) mm 边距 · \(template.copies) 份")
+                    Text(verbatim: AppCopy.templateSummary(
+                        paper: template.paper,
+                        scale: template.scale,
+                        marginMillimeters: template.marginMillimeters,
+                        copies: template.copies
+                    ))
                         .foregroundStyle(DesignTokens.Color.secondaryText)
                         .multilineTextAlignment(.center)
                 }
@@ -180,7 +188,7 @@ struct TemplateApplyView: View {
                         }
                     }
                     .padding(.horizontal, 14)
-                    .background(.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 18))
+                    .background(DesignTokens.Color.cardFill, in: RoundedRectangle(cornerRadius: 18))
                 }
 
                 PrimaryActionButton(title: "从文件选择 PDF", state: .enabled) {
@@ -201,40 +209,50 @@ struct TemplateApplyView: View {
         .background(DesignTokens.Color.canvas)
         .navigationTitle("套用模板")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
                 do {
-                    let source = try await appModel.pdfImportService.stage(urls: [try result.get()]).first
-                    guard let source, let pdf = PDFDocument(url: source.url), pdf.pageCount > 0 else {
+                    guard let source = sources.first,
+                          let inspection = PDFFileInspection.inspect(url: source.url) else {
+                        appModel.pdfImportService.cleanup(sources)
                         throw PDFImportService.ImportError.unableToStage
                     }
                     let values = try source.url.resourceValues(forKeys: [.fileSizeKey])
                     let record = DocumentRecord(
                         name: source.displayName,
-                        pageCount: pdf.pageCount,
+                        pageCount: inspection.pageCount,
                         byteCount: Int64(values.fileSize ?? 0),
                         source: .files,
-                        localURL: source.url
+                        localURL: source.url,
+                        isPasswordProtected: inspection.isLocked
                     )
                     try appModel.library.add(record)
-                    apply(to: record)
+                    if let stored = appModel.library.document(id: record.id) {
+                        apply(to: stored)
+                    }
                 } catch {
                     errorMessage = error.localizedDescription
                 }
             }
-        }
+        )
         .alert("无法导入文件", isPresented: .init(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
             Button("好", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "未知错误")
+            Text(errorMessage ?? String(localized: "未知错误"))
         }
     }
 
     private func apply(to document: DocumentRecord) {
-        appModel.transientMessage = "已套用模板：\(template.name)"
+        appModel.activePrintTemplate = template
+        appModel.transientMessage = String(localized: "已套用模板：\(AppCopy.templateTitle(template.name))")
         appModel.push(.document(document.id))
     }
 }

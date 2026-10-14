@@ -1,52 +1,62 @@
 import XCTest
 
+@MainActor
 final class PrintAssistantUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
     func testMainTabsRenderAndNavigate() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launch()
 
-        for (tab, title) in [
-            ("最近", "最近"),
-            ("文件", "文件"),
-            ("搜索", "搜索"),
-            ("工具", "工具")
+        for (identifier, title) in [
+            ("tab-recent", "最近"),
+            ("tab-files", "文件"),
+            ("tab-search", "搜索"),
+            ("tab-tools", "工具")
         ] {
-            let tabButton = app.tabBars.buttons[tab]
-            XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(tab)")
+            let tabButton = app.buttons[identifier]
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(identifier)")
             tabButton.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Missing navigation screen: \(title)")
-            attachScreenshot(of: app, named: "tab-\(tab)")
+            assertSelected(tabButton, "Tab not selected: \(identifier)")
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 10), "Missing screen title: \(title)")
+            attachScreenshot(of: app, named: identifier)
         }
     }
 
     func testPDFToolEntryScreensRender() throws {
-        let app = XCUIApplication()
-        for title in ["合并 PDF", "拆分 PDF", "页面管理", "压缩 PDF", "加密 PDF", "解除 PDF 密码"] {
+        let app = makeApp()
+        for (toolTitle, navigationTitle) in [
+            ("合并 PDF", "合并 PDF"),
+            ("拆分 PDF", "拆分 PDF"),
+            ("PDF 工具箱", "页面管理"),
+            ("压缩 PDF", "压缩 PDF"),
+            ("保护 PDF", "加密 PDF"),
+            ("解除 PDF 密码", "解除 PDF 密码")
+        ] {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
+            let tools = app.buttons["tab-tools"]
             XCTAssertTrue(tools.waitForExistence(timeout: 15))
             tools.tap()
+            assertSelected(tools, "Tools tab not selected")
 
-            let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
-            for _ in 0..<6 {
+            let tool = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", toolTitle)).firstMatch
+            for _ in 0..<8 {
                 if tool.exists && tool.isHittable { break }
                 app.swipeUp()
             }
-            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(title)")
+            XCTAssertTrue(tool.waitForExistence(timeout: 5) && tool.isHittable, "Missing tool: \(toolTitle)")
             tool.tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "Failed to open: \(title)")
-            attachScreenshot(of: app, named: "PDF-tool-\(title)")
+            XCTAssertTrue(app.navigationBars[navigationTitle].waitForExistence(timeout: 10), "Failed to open: \(toolTitle)")
+            attachScreenshot(of: app, named: "PDF-tool-\(toolTitle)")
         }
     }
 
     func testPhotoOCRAndIDCopyEntryScreensRender() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         for (toolTitle, navigationTitle) in [
             ("图片转 PDF", "选择图片"),
             ("文字识别", "文字识别"),
@@ -55,9 +65,10 @@ final class PrintAssistantUITests: XCTestCase {
             if app.state != .notRunning { app.terminate() }
             app.launch()
 
-            let tools = app.tabBars.buttons["工具"]
+            let tools = app.buttons["tab-tools"]
             XCTAssertTrue(tools.waitForExistence(timeout: 15))
             tools.tap()
+            assertSelected(tools, "Tools tab not selected")
 
             let entry = app.buttons.matching(
                 NSPredicate(format: "label CONTAINS %@", toolTitle)
@@ -88,6 +99,20 @@ final class PrintAssistantUITests: XCTestCase {
             )
             attachScreenshot(of: app, named: "extra-tool-\(toolTitle)")
         }
+    }
+
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_Hans"]
+        return app
+    }
+
+    private func assertSelected(_ element: XCUIElement, _ message: String) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isSelected == true"),
+            object: element
+        )
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: 5), .completed, message)
     }
 
     private func attachScreenshot(of app: XCUIApplication, named name: String) {

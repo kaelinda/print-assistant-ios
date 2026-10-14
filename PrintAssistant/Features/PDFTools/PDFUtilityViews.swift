@@ -17,7 +17,7 @@ struct PDFCompressionSourceView: View {
                         Button {
                             appModel.push(.pdfCompressionProcessing(.init(url: document.localURL, displayName: document.name)))
                         } label: {
-                            documentRow(document.name, detail: "\(document.pageCount) 页")
+                            documentRow(document.name, detail: String(localized: "\(document.pageCount) 页"))
                         }
                     }
                 }
@@ -30,20 +30,20 @@ struct PDFCompressionSourceView: View {
         }
         .navigationTitle("压缩 PDF")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
-                do {
-                    let sources = try await appModel.pdfImportService.stage(urls: [try result.get()])
-                    guard let source = sources.first else { return }
-                    appModel.push(.pdfCompressionProcessing(source))
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                guard let source = sources.first else { return }
+                appModel.push(.pdfCompressionProcessing(source))
             }
-        }
+        )
         .alert("无法读取 PDF", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 
     private func documentRow(_ title: String, detail: String) -> some View {
@@ -71,7 +71,7 @@ struct PDFCompressionProcessingView: View {
             Spacer()
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                 Text("压缩失败").font(.title2.bold())
                 Text(errorMessage).multilineTextAlignment(.center).foregroundStyle(.secondary)
@@ -99,18 +99,23 @@ struct PDFCompressionProcessingView: View {
     @MainActor
     private func compress() async {
         do {
-            let filename = "\(source.displayName.replacingOccurrences(of: ".pdf", with: ""))-压缩.pdf"
-            let result = try await PDFCompressionService().compress(sourceURL: source.url, filename: filename)
-            let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
-            let record = DocumentRecord(
-                name: filename,
-                pageCount: PDFDocument(url: result.url)?.pageCount ?? 1,
-                byteCount: Int64(values.fileSize ?? 0),
-                source: .generated,
-                localURL: result.url
-            )
-            try appModel.library.add(record)
+            let record = try await appModel.runExclusive { () -> DocumentRecord in
+                let filename = "\(String(localized: "压缩文件"))-\(UUID().uuidString).pdf"
+                let result = try await PDFCompressionService().compress(sourceURL: source.url, filename: filename)
+                let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
+                let record = DocumentRecord(
+                    name: filename,
+                    pageCount: PDFDocument(url: result.url)?.pageCount ?? 1,
+                    byteCount: Int64(values.fileSize ?? 0),
+                    source: .generated,
+                    localURL: result.url
+                )
+                try appModel.library.add(record)
+                return record
+            }
             appModel.replaceTop(with: .pdfCompressionSuccess(record.id))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -126,7 +131,7 @@ struct PDFCompressionSuccessView: View {
             VStack(spacing: 18) {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("PDF 已压缩").font(.title2.bold())
                 Text(document.name).font(.headline)
@@ -175,20 +180,20 @@ struct PDFProtectionSourceView: View {
         }
         .navigationTitle("保护 PDF")
         .navigationBarTitleDisplayMode(.inline)
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.pdf]) { result in
-            Task {
-                do {
-                    let sources = try await appModel.pdfImportService.stage(urls: [try result.get()])
-                    guard let source = sources.first else { return }
-                    appModel.push(.pdfProtection(source))
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
+        .libraryFileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.pdf],
+            importer: appModel.pdfImportService,
+            onStart: {},
+            onFailure: { errorMessage = $0 },
+            onFiles: { sources in
+                guard let source = sources.first else { return }
+                appModel.push(.pdfProtection(source))
             }
-        }
+        )
         .alert("无法读取 PDF", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 }
 
@@ -227,7 +232,7 @@ struct PDFProtectionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .alert("无法保护 PDF", isPresented: .init(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) {}
-        } message: { Text(errorMessage ?? "未知错误") }
+        } message: { Text(errorMessage ?? String(localized: "未知错误")) }
     }
 
     private func protect() {
@@ -235,7 +240,7 @@ struct PDFProtectionView: View {
         isWorking = true
         Task {
             do {
-                let name = "\(source.displayName.replacingOccurrences(of: ".pdf", with: ""))-已保护.pdf"
+                let name = "\(source.displayName.replacingOccurrences(of: ".pdf", with: ""))-\(String(localized: "已保护")).pdf"
                 let url = try await PDFProtectionService().protect(
                     .init(sourceURL: source.url, userPassword: password, ownerPassword: password),
                     filename: name
@@ -272,7 +277,7 @@ struct PDFProtectionSuccessView: View {
             VStack(spacing: 18) {
                 Spacer()
                 Image(systemName: "lock.circle.fill")
-                    .font(.system(size: 62))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.success)
                 Text("PDF 已保护").font(.title2.bold())
                 Text(document.name).font(.headline)

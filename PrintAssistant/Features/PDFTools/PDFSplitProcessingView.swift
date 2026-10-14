@@ -15,7 +15,7 @@ struct PDFSplitProcessingView: View {
 
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                     .accessibilityHidden(true)
                 Text("拆分失败")
@@ -60,7 +60,7 @@ struct PDFSplitProcessingView: View {
     @MainActor
     private func split() async {
         do {
-            let prefix = "拆分文件-\(Int(Date.now.timeIntervalSince1970))"
+            let prefix = "\(String(localized: "拆分文件"))-\(Int(Date.now.timeIntervalSince1970))"
             let urls = try await appModel.pdfOperationService.split(
                 url: draft.source.url,
                 ranges: draft.ranges,

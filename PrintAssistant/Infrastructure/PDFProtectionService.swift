@@ -13,13 +13,13 @@ struct PDFProtectionService: Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .unreadablePDF: "PDF 文件无法读取或已经损坏。"
-            case .alreadyLocked: "PDF 已经受密码保护。"
-            case .notLocked: "PDF 当前没有密码保护。"
-            case .invalidPassword: "密码不正确。"
-            case .emptyPassword: "密码不能为空。"
-            case .outputConflictsWithSource: "输出文件不能覆盖源 PDF。"
-            case .unableToWrite: "无法写入受保护的 PDF。"
+            case .unreadablePDF: String(localized: "PDF 文件无法读取或已经损坏。")
+            case .alreadyLocked: String(localized: "PDF 已经受密码保护。")
+            case .notLocked: String(localized: "PDF 当前没有密码保护。")
+            case .invalidPassword: String(localized: "密码不正确。")
+            case .emptyPassword: String(localized: "密码不能为空。")
+            case .outputConflictsWithSource: String(localized: "输出文件不能覆盖源 PDF。")
+            case .unableToWrite: String(localized: "无法写入受保护的 PDF。")
             }
         }
     }
@@ -133,18 +133,7 @@ struct PDFProtectionService: Sendable {
         directory: URL?,
         protectedInput: URL
     ) throws -> URL {
-        let root: URL
-        if let directory {
-            root = directory
-        } else {
-            let base = try FileManager.default.url(
-                for: .documentDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            )
-            root = base.appending(path: "Documents", directoryHint: .isDirectory)
-        }
+        let root = directory ?? LibraryPaths.filesDirectory()
 
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let output = root.appending(path: filename, directoryHint: .notDirectory)

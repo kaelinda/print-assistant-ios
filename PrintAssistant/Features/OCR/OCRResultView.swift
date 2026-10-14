@@ -45,7 +45,7 @@ struct OCRResultView: View {
                         HStack(spacing: DesignTokens.Spacing.sm) {
                             Button {
                                 UIPasteboard.general.string = result.text
-                                appModel.transientMessage = "文字已复制"
+                                appModel.transientMessage = String(localized: "文字已复制")
                             } label: {
                                 Label("复制", systemImage: "doc.on.doc")
                                     .frame(maxWidth: .infinity, minHeight: DesignTokens.minimumHitTarget)
@@ -55,7 +55,7 @@ struct OCRResultView: View {
                             Button {
                                 isExporting = true
                             } label: {
-                                Label("TXT", systemImage: "doc.text")
+                                Label("文本", systemImage: "doc.text")
                                     .frame(maxWidth: .infinity, minHeight: DesignTokens.minimumHitTarget)
                             }
                             .buttonStyle(.bordered)
@@ -87,7 +87,7 @@ struct OCRResultView: View {
 
     private var exportFilename: String {
         let base = (result.sourceName as NSString).deletingPathExtension
-        return base.isEmpty ? "识别文字" : base
+        return base.isEmpty ? String(localized: "识别文字") : base
     }
 }
 

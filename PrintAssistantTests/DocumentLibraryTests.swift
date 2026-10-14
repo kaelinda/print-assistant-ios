@@ -117,6 +117,135 @@ struct DocumentLibraryTests {
     }
 
     @Test
+    func relativePathIgnoresPrivateTempPrefix() {
+        let root = URL(fileURLWithPath: "/var/folders/xx/T/base/PrintAssistant", isDirectory: true)
+        let file = URL(fileURLWithPath: "/private/var/folders/xx/T/base/PrintAssistant/Documents/id-sample.pdf")
+        #expect(LibraryPaths.relativePath(for: file, root: root) == "Documents/id-sample.pdf")
+    }
+
+    @Test
+    func storesRelativePathsAndSurvivesLibraryRootMove() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "sample.pdf", source: .files)
+        let index = fixture.root.appending(path: "PrintAssistant/documents.json", directoryHint: .notDirectory)
+        let rows = try #require(
+            JSONSerialization.jsonObject(with: Data(contentsOf: index)) as? [[String: Any]]
+        )
+        let storedPath = try #require(rows.first?["localURL"] as? String)
+
+        #expect(storedPath.hasPrefix("Documents/"))
+        #expect(!storedPath.hasPrefix("/"))
+        #expect(!storedPath.hasPrefix("file:"))
+        #expect(!storedPath.contains(fixture.root.lastPathComponent))
+
+        let movedRoot = FileManager.default.temporaryDirectory
+            .appending(path: "PrintAssistantMoved-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: movedRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: movedRoot) }
+        try FileManager.default.copyItem(
+            at: fixture.root.appending(path: "PrintAssistant", directoryHint: .isDirectory),
+            to: movedRoot.appending(path: "PrintAssistant", directoryHint: .isDirectory)
+        )
+
+        let reloaded = DocumentLibrary(baseURL: movedRoot)
+        let stored = try #require(reloaded.document(id: record.id))
+        #expect(stored.name == "sample.pdf")
+        #expect(FileManager.default.fileExists(atPath: stored.localURL.path))
+        #expect(canonicalPath(stored.localURL).hasPrefix(canonicalPath(movedRoot) + "/"))
+    }
+
+    private func canonicalPath(_ url: URL) -> String {
+        let resolved = url.resolvingSymlinksInPath().standardizedFileURL.path
+        if resolved.hasPrefix("/private/") {
+            return String(resolved.dropFirst("/private".count))
+        }
+        return resolved
+    }
+
+    @Test
+    func corruptIndexIsBackedUpAndNotReplacedWithEmptyLibrary() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "PrintAssistantCorrupt-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = DocumentLibrary(baseURL: root)
+        let index = root.appending(path: "PrintAssistant/documents.json", directoryHint: .notDirectory)
+        let corrupt = Data("not-json".utf8)
+        try corrupt.write(to: index)
+
+        let broken = DocumentLibrary(baseURL: root)
+        #expect(broken.documents.isEmpty)
+        #expect(broken.persistenceError != nil)
+        #expect(!FileManager.default.fileExists(atPath: index.path))
+
+        let directory = index.deletingLastPathComponent()
+        let backups = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        let backup = try #require(backups.first { $0.lastPathComponent.hasPrefix("documents.json.corrupt-") })
+        #expect(try Data(contentsOf: backup) == corrupt)
+        #expect(!FileManager.default.fileExists(atPath: index.path))
+    }
+
+    @Test
+    func clearSearchableTextIsAtomicAndKeepsModifiedDate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "notes.pdf", source: .scan)
+        try fixture.library.updateSearchableText(id: record.id, text: "发票 128")
+        let before = try #require(fixture.library.document(id: record.id)).modifiedAt
+
+        try fixture.library.clearSearchableText()
+
+        let cleared = try #require(fixture.library.document(id: record.id))
+        #expect(cleared.searchableText == nil)
+        #expect(cleared.hasOCRText == false)
+        #expect(cleared.modifiedAt == before)
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        let stored = try #require(reloaded.document(id: record.id))
+        #expect(stored.searchableText == nil)
+        #expect(stored.hasOCRText == false)
+        #expect(stored.modifiedAt == before)
+    }
+
+    @Test
+    func pdfFilterMatchesExtensionAndImportSourceStaysSeparate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let scan = try fixture.add(name: "扫描件.pdf", source: .scan)
+        let imported = try fixture.add(name: "外部.pdf", source: .files)
+        let note = try fixture.add(name: "备注.txt", source: .generated)
+
+        let pdfs = fixture.library.visibleDocuments(source: .pdf)
+        #expect(Set(pdfs.map(\.id)) == Set([scan.id, imported.id]))
+        #expect(!pdfs.map(\.id).contains(note.id))
+
+        let imports = fixture.library.visibleDocuments(source: .files)
+        #expect(imports.map(\.id) == [imported.id])
+    }
+
+    @Test
+    func passwordProtectionFlagDoesNotBumpModifiedDate() throws {
+        let fixture = try Fixture()
+        defer { fixture.cleanup() }
+
+        let record = try fixture.add(name: "secret.pdf", source: .files)
+        let before = record.modifiedAt
+        try fixture.library.setPasswordProtection(id: record.id, isProtected: true)
+
+        let updated = try #require(fixture.library.document(id: record.id))
+        #expect(updated.isPasswordProtected)
+        #expect(updated.modifiedAt == before)
+
+        let reloaded = DocumentLibrary(baseURL: fixture.root)
+        #expect(reloaded.document(id: record.id)?.isPasswordProtected == true)
+        #expect(reloaded.document(id: record.id)?.modifiedAt == before)
+    }
+
+    @Test
     func unicodeFilenameSurvivesRelaunch() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "PrintAssistantUnicode-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -171,7 +300,7 @@ struct DocumentLibraryTests {
                 localURL: file
             )
             try library.add(record)
-            return record
+            return try #require(library.document(id: record.id))
         }
 
         func cleanup() {

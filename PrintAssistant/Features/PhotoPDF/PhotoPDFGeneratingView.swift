@@ -13,7 +13,7 @@ struct PhotoPDFGeneratingView: View {
 
             if let errorMessage {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(DesignTokens.Color.warning)
                     .accessibilityHidden(true)
 
@@ -57,7 +57,7 @@ struct PhotoPDFGeneratingView: View {
         await Task.yield()
 
         do {
-            let filename = "图片合集-\(Int(Date.now.timeIntervalSince1970)).pdf"
+            let filename = AppCopy.datedPDF(String(localized: "图片合集"))
             let url = try await appModel.pdfService.makePhotoPDF(from: draft, filename: filename)
             let values = try url.resourceValues(forKeys: [.fileSizeKey])
             let record = DocumentRecord(

@@ -15,3 +15,7 @@ xcuserdata/
 
 # XcodeGen
 PrintAssistant.xcodeproj/
+
+# Python
+__pycache__/
+*.pyc

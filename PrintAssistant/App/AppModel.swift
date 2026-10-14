@@ -52,19 +52,19 @@ final class AppModel {
         case templateEditor(PrintTemplate)
         case templateApply(PrintTemplate)
         case batchSelection
-        case batchProcessing([DocumentRecord.ID])
-        case batchSuccess([DocumentRecord.ID])
+        case batchProcessing(BatchJob)
+        case batchSuccess(BatchJob)
         case pdfCompressionSource
         case pdfCompressionProcessing(PDFSourceItem)
         case pdfCompressionSuccess(DocumentRecord.ID)
         case pdfProtectionSource
         case pdfProtection(PDFSourceItem)
         case pdfProtectionSuccess(DocumentRecord.ID)
-        case pdfUtility(PDFUtilityMode)
+        case pdfUtility(PDFUtilityMode, DocumentRecord.ID?)
         case photoIDSource
         case photoIDCrop(PhotoIDDraft)
         case photoIDGenerating(PhotoIDDraft)
-        case photoIDSuccess(DocumentRecord.ID)
+        case photoIDSuccess(DocumentRecord.ID, sheetCount: Int)
         case imageExport(DocumentRecord.ID)
         case settings
         case privacy
@@ -72,10 +72,29 @@ final class AppModel {
         case feedback
     }
 
+    enum WorkError: LocalizedError, Equatable {
+        case busy
+
+        var errorDescription: String? {
+            switch self {
+            case .busy: String(localized: "已有处理任务正在进行，请稍候。")
+            }
+        }
+    }
+
     var selectedTab: Tab = .recent
     var path: [Route] = []
     var isWorking = false
     var transientMessage: String?
+    var activePrintTemplate: PrintTemplate?
+
+    /// Runs one merge, compress, or OCR job at a time.
+    func runExclusive<T>(_ operation: () async throws -> T) async throws -> T {
+        guard !isWorking else { throw WorkError.busy }
+        isWorking = true
+        defer { isWorking = false }
+        return try await operation()
+    }
 
     let library: DocumentLibrary
     let pdfService: PDFDocumentService
