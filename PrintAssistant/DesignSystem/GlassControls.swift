@@ -207,9 +207,9 @@ struct GlassTabBar: View {
         HStack(alignment: .center, spacing: 10) {
             GlassSurface(cornerRadius: 32) {
                 HStack(spacing: 0) {
+                    tab(.tools, title: "工具", systemImage: "slider.horizontal.3")
                     tab(.recent, title: "最近", systemImage: "clock")
                     tab(.files, title: "文件", systemImage: "folder")
-                    tab(.tools, title: "工具", systemImage: "slider.horizontal.3")
                 }
                 .padding(6)
                 .frame(maxWidth: .infinity)

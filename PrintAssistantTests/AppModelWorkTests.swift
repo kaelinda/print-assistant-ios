@@ -5,6 +5,16 @@ import Testing
 @MainActor
 struct AppModelWorkTests {
     @Test
+    @MainActor
+    func startsOnToolsAndCanPushTheToolOrderEditor() {
+        let model = AppModel()
+
+        #expect(model.selectedTab == .tools)
+        model.push(.toolOrderEditor)
+        #expect(model.path == [.toolOrderEditor])
+    }
+
+    @Test
     func exclusiveWorkRejectsASecondOperationUntilTheFirstFinishes() async throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "AppModelWorkTests-\(UUID().uuidString)", directoryHint: .isDirectory)

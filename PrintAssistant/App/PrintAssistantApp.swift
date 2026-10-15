@@ -4,6 +4,12 @@ import SwiftUI
 struct PrintAssistantApp: App {
     @State private var appModel = AppModel()
 
+    init() {
+        if ProcessInfo.processInfo.arguments.contains("-UITestResetToolOrder") {
+            UserDefaults.standard.removeObject(forKey: ToolOrderStore.storageKey)
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             AppRootView()

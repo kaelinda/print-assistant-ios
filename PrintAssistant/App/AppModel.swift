@@ -70,6 +70,7 @@ final class AppModel {
         case privacy
         case privacyPolicy
         case feedback
+        case toolOrderEditor
     }
 
     enum WorkError: LocalizedError, Equatable {
@@ -82,7 +83,7 @@ final class AppModel {
         }
     }
 
-    var selectedTab: Tab = .recent
+    var selectedTab: Tab = .tools
     var path: [Route] = []
     var isWorking = false
     var transientMessage: String?

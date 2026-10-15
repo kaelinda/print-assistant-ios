@@ -11,10 +11,10 @@ final class PrintAssistantUITests: XCTestCase {
         app.launch()
 
         for (identifier, title) in [
+            ("tab-tools", "工具"),
             ("tab-recent", "最近"),
             ("tab-files", "文件"),
-            ("tab-search", "搜索"),
-            ("tab-tools", "工具")
+            ("tab-search", "搜索")
         ] {
             let tabButton = app.buttons[identifier]
             XCTAssertTrue(tabButton.waitForExistence(timeout: 15), "Missing tab: \(identifier)")
@@ -22,6 +22,30 @@ final class PrintAssistantUITests: XCTestCase {
             assertSelected(tabButton, "Tab not selected: \(identifier)")
             XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 10), "Missing screen title: \(title)")
             attachScreenshot(of: app, named: identifier)
+        }
+    }
+
+    func testToolOrderEditorScreenRenders() throws {
+        let app = makeApp()
+        app.launch()
+
+        let tools = app.buttons["tab-tools"]
+        XCTAssertTrue(tools.waitForExistence(timeout: 15))
+        tools.tap()
+
+        let editButton = app.buttons["tool-order-edit"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 10))
+        editButton.tap()
+
+        XCTAssertTrue(app.navigationBars["调整工具顺序"].waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.descendants(matching: .any)["tool-order-row-pdfTools"].waitForExistence(timeout: 5)
+        )
+        for groupTitle in ["文档", "打印与证件", "更多 PDF"] {
+            for _ in 0..<4 where !app.staticTexts[groupTitle].exists {
+                app.swipeUp()
+            }
+            XCTAssertTrue(app.staticTexts[groupTitle].waitForExistence(timeout: 5))
         }
     }
 
@@ -101,9 +125,12 @@ final class PrintAssistantUITests: XCTestCase {
         }
     }
 
-    private func makeApp() -> XCUIApplication {
+    private func makeApp(resetToolOrder: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_Hans"]
+        if resetToolOrder {
+            app.launchArguments += ["-UITestResetToolOrder"]
+        }
         return app
     }
 

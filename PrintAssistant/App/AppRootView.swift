@@ -120,6 +120,8 @@ struct AppRootView: View {
                     PrivacyPolicyView()
                 case .feedback:
                     FeedbackView()
+                case .toolOrderEditor:
+                    ToolOrderEditorView()
                 }
             }
         }

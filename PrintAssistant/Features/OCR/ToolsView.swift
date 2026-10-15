@@ -3,22 +3,31 @@ import SwiftUI
 struct ToolsView: View {
     @Environment(AppModel.self) private var appModel
 
-    private struct ToolDefinition {
-        let title: String
-        let subtitle: String
-        let systemImage: String
-        let tint: SwiftUI.Color
-        let action: () -> Void
+    private let orderStore: ToolOrderStore
+    @State private var orderedIDs: [ToolGroup: [ToolID]]
+
+    init(orderStore: ToolOrderStore = .init()) {
+        self.orderStore = orderStore
+        _orderedIDs = State(initialValue: orderStore.load())
     }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
-                HStack {
+                HStack(spacing: 10) {
                     Text("工具")
                         .font(.largeTitle.bold())
                         .foregroundStyle(DesignTokens.Color.primaryText)
                     Spacer()
+                    GlassIconButton {
+                        appModel.push(.toolOrderEditor)
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(DesignTokens.Color.primaryText)
+                    }
+                    .accessibilityLabel("调整顺序")
+                    .accessibilityIdentifier("tool-order-edit")
                     GlassIconButton {
                         appModel.push(.settings)
                     } label: {
@@ -31,26 +40,9 @@ struct ToolsView: View {
                 }
                 .frame(minHeight: 52)
 
-                toolSection(title: "文档", rows: [
-                    ToolDefinition(title: "PDF 工具箱", subtitle: "合并、拆分、提取页面", systemImage: "doc.on.doc", tint: DesignTokens.Color.accent) { appModel.push(.pdfPageSource) },
-                    ToolDefinition(title: "批量处理", subtitle: "一次处理多个文件", systemImage: "square.stack.3d.up", tint: DesignTokens.Color.warning) { appModel.push(.batchSelection) },
-                    ToolDefinition(title: "压缩 PDF", subtitle: "减小文件体积，保留页面", systemImage: "doc.zipper", tint: DesignTokens.Color.accent) { appModel.push(.pdfUtility(.compress, nil)) },
-                    ToolDefinition(title: "保护 PDF", subtitle: "设置密码，生成受保护副本", systemImage: "lock.doc", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.protect, nil)) },
-                    ToolDefinition(title: "解除 PDF 密码", subtitle: "使用正确密码生成未加密副本", systemImage: "lock.open", tint: DesignTokens.Color.warning) { appModel.push(.pdfUtility(.unlock, nil)) },
-                    ToolDefinition(title: "文字识别", subtitle: "从图片或 PDF 提取文字", systemImage: "text.viewfinder", tint: DesignTokens.Color.success) { appModel.push(.ocrSource) }
-                ])
-
-                toolSection(title: "打印与证件", rows: [
-                    ToolDefinition(title: "证件工具", subtitle: "身份证复印、证件照排版", systemImage: "person.text.rectangle", tint: DesignTokens.Color.warning) { appModel.push(.idToolHub) },
-                    ToolDefinition(title: "图片转 PDF", subtitle: "图片自动适配纸张", systemImage: "photo.on.rectangle.angled", tint: DesignTokens.Color.accent) { appModel.push(.photoPDFSelection) },
-                    ToolDefinition(title: "证件照排版", subtitle: "1 寸照片排版到 A4", systemImage: "person.crop.rectangle", tint: DesignTokens.Color.warning) { appModel.push(.photoIDSource) },
-                    ToolDefinition(title: "打印模板", subtitle: "保存常用纸张与边距", systemImage: "printer", tint: DesignTokens.Color.success) { appModel.push(.templateCenter) }
-                ])
-
-                toolSection(title: "更多 PDF", rows: [
-                    ToolDefinition(title: "合并 PDF", subtitle: "按顺序合并多个文件", systemImage: "arrow.triangle.merge", tint: DesignTokens.Color.accent) { appModel.push(.pdfMergeSelection) },
-                    ToolDefinition(title: "拆分 PDF", subtitle: "按页码范围拆出新文件", systemImage: "arrow.triangle.branch", tint: DesignTokens.Color.accent) { appModel.push(.pdfSplitSource) }
-                ])
+                ForEach(ToolGroup.allCases, id: \.self) { group in
+                    toolSection(group)
+                }
             }
             .padding(.horizontal, 24)
             .padding(.top, 8)
@@ -58,25 +50,30 @@ struct ToolsView: View {
         }
         .background(DesignTokens.Color.canvas)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            orderedIDs = orderStore.load()
+        }
     }
 
-    private func toolSection(
-        title: LocalizedStringKey,
-        rows: [ToolDefinition]
-    ) -> some View {
+    @ViewBuilder
+    private func toolSection(_ group: ToolGroup) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GlassSectionHeader(title)
+            GlassSectionHeader(LocalizedStringKey(stringLiteral: group.title))
             GlassCard(cornerRadius: 20) {
                 VStack(spacing: 0) {
-                    ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                    let ids = orderedIDs[group, default: []]
+                    ForEach(Array(ids.enumerated()), id: \.element) { index, id in
+                        let entry = ToolCatalog.entry(for: id)
                         GlassActionRow(
-                            title: LocalizedStringKey(stringLiteral: row.title),
-                            subtitle: LocalizedStringKey(stringLiteral: row.subtitle),
-                            systemImage: row.systemImage,
-                            tint: row.tint,
-                            action: row.action
-                        )
-                        if index < rows.count - 1 {
+                            title: LocalizedStringKey(stringLiteral: entry.title),
+                            subtitle: LocalizedStringKey(stringLiteral: entry.subtitle),
+                            systemImage: entry.systemImage,
+                            tint: entry.tint
+                        ) {
+                            appModel.push(entry.route)
+                        }
+                        .accessibilityIdentifier("tool-row-\(id.rawValue)")
+                        if index < ids.count - 1 {
                             Divider().padding(.leading, 70)
                         }
                     }
