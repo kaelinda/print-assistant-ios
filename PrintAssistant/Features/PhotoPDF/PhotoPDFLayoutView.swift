@@ -69,7 +69,7 @@ struct PhotoPDFLayoutView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.white)
-                    .shadow(color: .black.opacity(0.10), radius: 12, y: 6)
+                    .shadow(color: DesignTokens.Color.shadow.opacity(0.76), radius: 12, y: 6)
 
                 if
                     let first = draft.items.first,

@@ -51,6 +51,32 @@ enum PhotoIDGeometry {
         return oneInch
     }
 
+    static func cardRects(
+        for spec: Spec,
+        pageSize: CGSize = PhysicalPrintGeometry.a4Size,
+        gapMillimeters: CGFloat = 6
+    ) -> [CGRect] {
+        let cardSize = spec.cardSize
+        let gap = PhysicalPrintGeometry.points(millimeters: gapMillimeters)
+        let totalWidth = cardSize.width * CGFloat(spec.columns) + gap * CGFloat(spec.columns - 1)
+        let totalHeight = cardSize.height * CGFloat(spec.rows) + gap * CGFloat(spec.rows - 1)
+        let origin = CGPoint(
+            x: (pageSize.width - totalWidth) / 2,
+            y: (pageSize.height - totalHeight) / 2
+        )
+
+        return (0..<spec.rows).flatMap { row in
+            (0..<spec.columns).map { column in
+                CGRect(
+                    x: origin.x + CGFloat(column) * (cardSize.width + gap),
+                    y: origin.y + CGFloat(row) * (cardSize.height + gap),
+                    width: cardSize.width,
+                    height: cardSize.height
+                )
+            }
+        }
+    }
+
     /// Crop window inside `imageSize` that matches `aspect` and shifts with `offset`.
     /// Each axis of `offset` is clamped to -1...1. Zero is centered.
     static func cropRect(imageSize: CGSize, aspect: CGSize, offset: CGSize) -> CGRect {

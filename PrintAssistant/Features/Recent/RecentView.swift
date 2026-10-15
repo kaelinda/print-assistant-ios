@@ -25,7 +25,7 @@ struct RecentView: View {
                     .buttonStyle(.plain)
                     .background(.ultraThinMaterial, in: Circle())
                     .overlay { Circle().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
-                    .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
+                    .shadow(color: DesignTokens.Color.shadow, radius: 15, y: 10)
                     .accessibilityLabel("扫描文档")
                 }
                 .frame(minHeight: 52)
@@ -49,7 +49,7 @@ struct RecentView: View {
                 .buttonStyle(.plain)
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
-                .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.13), radius: 15, y: 10)
+                .shadow(color: DesignTokens.Color.shadow, radius: 15, y: 10)
                 .accessibilityLabel("搜索文档与扫描文字")
 
                 Color.clear.frame(height: 74)
@@ -97,8 +97,13 @@ struct RecentView: View {
                     localURL: source.url,
                     isPasswordProtected: inspection.isLocked
                 )
-                try appModel.library.add(record)
-                added += 1
+                do {
+                    try appModel.library.add(record)
+                    added += 1
+                } catch {
+                    appModel.pdfImportService.cleanup([source])
+                    throw error
+                }
             }
             if added == 0 {
                 errorMessage = String(localized: "没有可导入的 PDF。")
@@ -146,7 +151,7 @@ struct RecentView: View {
             .frame(width: 216, height: 52)
             .background(.ultraThinMaterial, in: Capsule())
             .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
-            .shadow(color: Color(red: 20 / 255, green: 26 / 255, blue: 41 / 255).opacity(0.08), radius: 9, y: 6)
+            .shadow(color: DesignTokens.Color.shadow.opacity(0.62), radius: 9, y: 6)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 370)

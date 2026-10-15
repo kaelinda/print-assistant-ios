@@ -35,9 +35,11 @@ struct PDFProtectionService: Sendable {
         filename: String
     ) async throws -> URL {
         guard request.isValid else { throw ProtectionError.emptyPassword }
+        try Task.checkCancellation()
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             guard let document = PDFDocument(url: request.sourceURL), document.pageCount > 0 else {
                 throw ProtectionError.unreadablePDF
             }
@@ -57,7 +59,15 @@ struct PDFProtectionService: Sendable {
             ]
 
             guard document.write(to: url, withOptions: options) else {
+                try? FileManager.default.removeItem(at: url)
                 throw ProtectionError.unableToWrite
+            }
+
+            do {
+                try Task.checkCancellation()
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
             }
 
             guard
@@ -72,7 +82,12 @@ struct PDFProtectionService: Sendable {
 
             try Self.protectAtRest(url)
             return url
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     func removeProtection(
@@ -81,9 +96,11 @@ struct PDFProtectionService: Sendable {
         filename: String
     ) async throws -> URL {
         guard !password.isEmpty else { throw ProtectionError.emptyPassword }
+        try Task.checkCancellation()
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             guard let document = PDFDocument(url: sourceURL), document.pageCount > 0 else {
                 throw ProtectionError.unreadablePDF
             }
@@ -104,6 +121,7 @@ struct PDFProtectionService: Sendable {
             // encryption settings when an unlocked document is written directly.
             let unprotected = PDFDocument()
             for pageIndex in 0..<document.pageCount {
+                try Task.checkCancellation()
                 guard let original = document.page(at: pageIndex),
                       let copy = original.copy() as? PDFPage else {
                     throw ProtectionError.unableToWrite
@@ -111,7 +129,15 @@ struct PDFProtectionService: Sendable {
                 unprotected.insert(copy, at: pageIndex)
             }
             guard unprotected.write(to: url) else {
+                try? FileManager.default.removeItem(at: url)
                 throw ProtectionError.unableToWrite
+            }
+
+            do {
+                try Task.checkCancellation()
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
             }
 
             guard
@@ -125,7 +151,12 @@ struct PDFProtectionService: Sendable {
 
             try Self.protectAtRest(url)
             return url
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     private static func outputURL(

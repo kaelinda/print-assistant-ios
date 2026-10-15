@@ -57,7 +57,7 @@ struct PDFMergeProcessingView: View {
             await merge()
         }
         .onDisappear {
-            if !completed && errorMessage != nil {
+            if !completed {
                 appModel.pdfImportService.cleanup(draft.sources)
             }
         }
@@ -81,7 +81,12 @@ struct PDFMergeProcessingView: View {
                     source: .generated,
                     localURL: url
                 )
-                try appModel.library.add(record)
+                do {
+                    try appModel.library.add(record)
+                } catch {
+                    try? FileManager.default.removeItem(at: url)
+                    throw error
+                }
                 return record
             }
             appModel.pdfImportService.cleanup(draft.sources)

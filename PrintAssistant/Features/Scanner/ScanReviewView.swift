@@ -70,7 +70,12 @@ struct ScanReviewView: View {
                 source: .scan,
                 localURL: url
             )
-            try appModel.library.add(record)
+            do {
+                try appModel.library.add(record)
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
+            }
             appModel.path = [.document(record.id)]
             let savedMessage = String(localized: "已保存到本机")
             appModel.transientMessage = savedMessage

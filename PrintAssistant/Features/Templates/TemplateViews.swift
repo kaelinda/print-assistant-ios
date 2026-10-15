@@ -231,9 +231,17 @@ struct TemplateApplyView: View {
                         localURL: source.url,
                         isPasswordProtected: inspection.isLocked
                     )
-                    try appModel.library.add(record)
+                    do {
+                        try appModel.library.add(record)
+                    } catch {
+                        appModel.pdfImportService.cleanup(sources)
+                        throw error
+                    }
                     if let stored = appModel.library.document(id: record.id) {
                         apply(to: stored)
+                    }
+                    if sources.count > 1 {
+                        appModel.pdfImportService.cleanup(Array(sources.dropFirst()))
                     }
                 } catch {
                     errorMessage = error.localizedDescription

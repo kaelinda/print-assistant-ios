@@ -42,7 +42,7 @@ struct GlassIconButton<Label: View>: View {
         .overlay {
             Circle().stroke(DesignTokens.Color.hairline, lineWidth: 0.75)
         }
-        .shadow(color: .black.opacity(0.08), radius: 12, y: 6)
+        .shadow(color: DesignTokens.Color.shadow.opacity(0.62), radius: 12, y: 6)
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -96,7 +96,7 @@ struct GlassSearchField: View {
         .frame(minHeight: 48)
         .background(.ultraThinMaterial, in: Capsule())
         .overlay { Capsule().stroke(DesignTokens.Color.hairline, lineWidth: 1) }
-        .shadow(color: Color.black.opacity(0.08), radius: 12, y: 7)
+        .shadow(color: DesignTokens.Color.shadow.opacity(0.62), radius: 12, y: 7)
     }
 }
 

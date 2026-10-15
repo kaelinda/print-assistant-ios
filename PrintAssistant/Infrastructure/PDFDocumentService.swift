@@ -29,19 +29,22 @@ struct PDFDocumentService: Sendable {
         let url = try Self.outputURL(filename: filename)
 
         guard document.write(to: url) else {
+            try? FileManager.default.removeItem(at: url)
             throw PDFError.unableToWrite
         }
         return url
     }
 
     func makePhotoPDF(from draft: PhotoPDFDraft, filename: String) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
+        try Task.checkCancellation()
+        return try await Self.runCancellable {
             try Self.renderPhotoPDF(from: draft, filename: filename)
-        }.value
+        }
     }
 
     private static func renderPhotoPDF(from draft: PhotoPDFDraft, filename: String) throws -> URL {
         for item in draft.items {
+            try Task.checkCancellation()
             let isReadable = autoreleasepool {
                 UIImage(data: item.data) != nil
             }
@@ -81,7 +84,12 @@ struct PDFDocumentService: Sendable {
                     context.cgContext.restoreGState()
                 }
             }
+            try Task.checkCancellation()
+        } catch is CancellationError {
+            try? FileManager.default.removeItem(at: url)
+            throw CancellationError()
         } catch {
+            try? FileManager.default.removeItem(at: url)
             throw PDFError.unableToWrite
         }
 
@@ -97,13 +105,15 @@ struct PDFDocumentService: Sendable {
     }
 
     func makeIDCopyPDF(from draft: IDCopyDraft, filename: String) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
+        try Task.checkCancellation()
+        return try await Self.runCancellable {
             try Self.renderIDCopyPDF(from: draft, filename: filename)
-        }.value
+        }
     }
 
     func makePhotoIDPDF(from draft: PhotoIDDraft, filename: String) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
+        try Task.checkCancellation()
+        return try await Self.runCancellable {
             guard let image = UIImage(data: draft.data) else {
                 throw PDFError.unableToDecodeImage
             }
@@ -113,16 +123,7 @@ struct PDFDocumentService: Sendable {
             let pageSize = PhysicalPrintGeometry.a4Size
             let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize))
             let url = try Self.outputURL(filename: filename)
-            let cardSize = spec.cardSize
-            let gap = Self.points(millimeters: 6)
-            let columns = spec.columns
-            let rows = spec.rows
-            let totalWidth = cardSize.width * CGFloat(columns) + gap * CGFloat(columns - 1)
-            let totalHeight = cardSize.height * CGFloat(rows) + gap * CGFloat(rows - 1)
-            let origin = CGPoint(
-                x: (pageSize.width - totalWidth) / 2,
-                y: (pageSize.height - totalHeight) / 2
-            )
+            let cardRects = PhotoIDGeometry.cardRects(for: spec, pageSize: pageSize)
 
             do {
                 try renderer.writePDF(to: url) { context in
@@ -130,30 +131,27 @@ struct PDFDocumentService: Sendable {
                     UIColor.white.setFill()
                     context.cgContext.fill(CGRect(origin: .zero, size: pageSize))
 
-                    for row in 0..<rows {
-                        for column in 0..<columns {
-                            let rect = CGRect(
-                                x: origin.x + CGFloat(column) * (cardSize.width + gap),
-                                y: origin.y + CGFloat(row) * (cardSize.height + gap),
-                                width: cardSize.width,
-                                height: cardSize.height
-                            )
-                            let background: UIColor = switch draft.background {
-                            case .white: .white
-                            case .blue: UIColor(red: 0.34, green: 0.58, blue: 0.88, alpha: 1)
-                            case .red: UIColor(red: 0.84, green: 0.22, blue: 0.24, alpha: 1)
-                            }
-                            background.setFill()
-                            context.cgContext.fill(rect)
-                            context.cgContext.saveGState()
-                            context.cgContext.clip(to: rect)
-                            let drawRect = Self.aspectFillRect(portrait.size, in: rect)
-                            portrait.draw(in: drawRect)
-                            context.cgContext.restoreGState()
+                    for rect in cardRects {
+                        let background: UIColor = switch draft.background {
+                        case .white: .white
+                        case .blue: UIColor(red: 0.34, green: 0.58, blue: 0.88, alpha: 1)
+                        case .red: UIColor(red: 0.84, green: 0.22, blue: 0.24, alpha: 1)
                         }
+                        background.setFill()
+                        context.cgContext.fill(rect)
+                        context.cgContext.saveGState()
+                        context.cgContext.clip(to: rect)
+                        let drawRect = Self.aspectFillRect(portrait.size, in: rect)
+                        portrait.draw(in: drawRect)
+                        context.cgContext.restoreGState()
                     }
                 }
+                try Task.checkCancellation()
+            } catch is CancellationError {
+                try? FileManager.default.removeItem(at: url)
+                throw CancellationError()
             } catch {
+                try? FileManager.default.removeItem(at: url)
                 throw PDFError.unableToWrite
             }
 
@@ -162,7 +160,7 @@ struct PDFDocumentService: Sendable {
                 throw PDFError.unableToWrite
             }
             return url
-        }.value
+        }
     }
 
     private static func renderIDCopyPDF(from draft: IDCopyDraft, filename: String) throws -> URL {
@@ -206,7 +204,12 @@ struct PDFDocumentService: Sendable {
                 Self.drawImage(front, inside: frontRect, context: context.cgContext)
                 Self.drawImage(back, inside: backRect, context: context.cgContext)
             }
+            try Task.checkCancellation()
+        } catch is CancellationError {
+            try? FileManager.default.removeItem(at: url)
+            throw CancellationError()
         } catch {
+            try? FileManager.default.removeItem(at: url)
             throw PDFError.unableToWrite
         }
 
@@ -281,10 +284,6 @@ struct PDFDocumentService: Sendable {
         }
     }
 
-    private static func points(millimeters: CGFloat) -> CGFloat {
-        millimeters / 25.4 * 72
-    }
-
     private static func aspectFillRect(_ imageSize: CGSize, in rect: CGRect) -> CGRect {
         guard imageSize.width > 0, imageSize.height > 0 else { return rect }
         let scale = max(rect.width / imageSize.width, rect.height / imageSize.height)
@@ -301,5 +300,16 @@ struct PDFDocumentService: Sendable {
         let directory = LibraryPaths.filesDirectory()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
+    }
+
+    private static func runCancellable<T: Sendable>(
+        _ operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        let task = Task.detached(priority: .userInitiated, operation: operation)
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 }

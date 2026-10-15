@@ -62,8 +62,15 @@ struct IDCopyGeneratingView: View {
                 localURL: url
             )
 
-            try appModel.library.add(record)
+            do {
+                try appModel.library.add(record)
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
+            }
             appModel.replaceTop(with: .idCopySuccess(record.id))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }

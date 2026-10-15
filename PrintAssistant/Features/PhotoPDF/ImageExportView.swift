@@ -109,7 +109,8 @@ struct ImageExportView: View {
     }
 
     private func renderPages(at url: URL) async throws -> [UIImage] {
-        try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             guard let pdf = PDFDocument(url: url) else {
                 throw PhotoExportError.unreadablePDF
             }
@@ -136,6 +137,11 @@ struct ImageExportView: View {
             }
             guard !rendered.isEmpty else { throw PhotoExportError.unreadablePDF }
             return rendered
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 }

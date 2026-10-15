@@ -17,7 +17,7 @@ struct IDCopyConfirmView: View {
                     .scaledToFit()
                     .frame(maxHeight: 360)
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card))
-                    .shadow(color: .black.opacity(0.10), radius: 16, y: 8)
+                    .shadow(color: DesignTokens.Color.shadow.opacity(0.76), radius: 16, y: 8)
                     .accessibilityLabel(Text(side.reviewAccessibilityLabel))
             }
 

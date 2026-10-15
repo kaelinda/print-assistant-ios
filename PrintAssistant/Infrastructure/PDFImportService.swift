@@ -18,18 +18,23 @@ struct PDFImportService: Sendable {
 
     func copyIntoLibrary(urls: [URL]) async throws -> [PDFSourceItem] {
         guard !urls.isEmpty else { throw ImportError.noFiles }
+        try Task.checkCancellation()
         let directory = filesDirectory ?? LibraryPaths.filesDirectory()
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
             var staged: [PDFSourceItem] = []
+            var currentDestination: URL?
             do {
                 for source in urls {
+                    try Task.checkCancellation()
                     let destination = directory.appending(
                         path: Self.uniqueFileName(for: source.lastPathComponent),
                         directoryHint: .notDirectory
                     )
+                    currentDestination = destination
                     try FileManager.default.copyItem(at: source, to: destination)
                     try FileManager.default.setAttributes(
                         [.protectionKey: FileProtectionType.complete],
@@ -40,15 +45,27 @@ struct PDFImportService: Sendable {
                         displayName: source.lastPathComponent,
                         isTemporary: true
                     ))
+                    currentDestination = nil
                 }
                 return staged
             } catch {
                 for item in staged {
                     try? FileManager.default.removeItem(at: item.url)
                 }
+                if let currentDestination {
+                    try? FileManager.default.removeItem(at: currentDestination)
+                }
+                if error is CancellationError {
+                    throw error
+                }
                 throw ImportError.unableToStage
             }
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     func cleanup(_ items: [PDFSourceItem]) {

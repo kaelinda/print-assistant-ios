@@ -56,6 +56,14 @@ struct OCRProcessingView: View {
             guard errorMessage == nil else { return }
             await recognize()
         }
+        .onDisappear {
+            guard let temporaryURL = input.temporaryURL else { return }
+            appModel.pdfImportService.cleanup([.init(
+                url: temporaryURL,
+                displayName: input.displayName,
+                isTemporary: true
+            )])
+        }
     }
 
     @MainActor

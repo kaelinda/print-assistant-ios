@@ -75,9 +75,11 @@ struct PDFOperationService: Sendable {
         filenamePrefix: String
     ) async throws -> [URL] {
         guard !ranges.isEmpty else { throw OperationError.invalidRange }
+        try Task.checkCancellation()
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             let source = try Self.open(url)
             let validated = try ranges.map { range -> ClosedRange<Int> in
                 guard
@@ -93,8 +95,10 @@ struct PDFOperationService: Sendable {
             var outputs: [URL] = []
             do {
                 for (index, range) in validated.enumerated() {
+                    try Task.checkCancellation()
                     let document = PDFDocument()
                     for pageIndex in range {
+                        try Task.checkCancellation()
                         document.insert(
                             try Self.copyPage(from: source, index: pageIndex),
                             at: document.pageCount
@@ -117,14 +121,21 @@ struct PDFOperationService: Sendable {
                 }
                 throw error
             }
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     func applyPagePlan(_ plan: PDFPagePlan, filename: String) async throws -> URL {
         guard !plan.pageIndexes.isEmpty else { throw OperationError.emptyOutput }
+        try Task.checkCancellation()
         let directory = outputDirectory
 
-        return try await Task.detached(priority: .userInitiated) {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
             let source = try Self.open(plan.sourceURL)
 
             guard plan.pageIndexes.allSatisfy({ $0 >= 0 && $0 < source.pageCount }) else {
@@ -133,6 +144,7 @@ struct PDFOperationService: Sendable {
 
             let output = PDFDocument()
             for index in plan.pageIndexes {
+                try Task.checkCancellation()
                 output.insert(
                     try Self.copyPage(from: source, index: index),
                     at: output.pageCount
@@ -146,7 +158,12 @@ struct PDFOperationService: Sendable {
                 directory: directory,
                 protectedInputs: [plan.sourceURL]
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     private static func open(_ url: URL) throws -> PDFDocument {
@@ -177,6 +194,7 @@ struct PDFOperationService: Sendable {
         protectedInputs: [URL]
     ) throws -> URL {
         guard expectedPageCount > 0 else { throw OperationError.emptyOutput }
+        try Task.checkCancellation()
 
         let root = try directory ?? defaultOutputDirectory()
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -188,7 +206,15 @@ struct PDFOperationService: Sendable {
         }
 
         guard document.write(to: url) else {
+            try? FileManager.default.removeItem(at: url)
             throw OperationError.unableToWrite
+        }
+
+        do {
+            try Task.checkCancellation()
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw error
         }
 
         guard

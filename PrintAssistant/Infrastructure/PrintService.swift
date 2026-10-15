@@ -3,31 +3,96 @@ import UIKit
 
 @MainActor
 enum PrintService {
-    static func present(url: URL, jobName: String, template: PrintTemplate? = nil) {
-        let controller = UIPrintInteractionController.shared
-        let info = UIPrintInfo.printInfo()
-        info.jobName = jobName
-        info.outputType = .general
-        if let template {
-            let paper = PrintLayout.paperSize(named: template.paper)
-            info.orientation = paper.width > paper.height ? .landscape : .portrait
+    static func present(
+        url: URL,
+        jobName: String,
+        template: PrintTemplate? = nil,
+        onFailure: ((String) -> Void)? = nil
+    ) {
+        Task { @MainActor in
+            let item: URL
+            do {
+                item = try await preparedURLForPresentation(source: url, template: template)
+            } catch {
+                onFailure?(error.localizedDescription)
+                return
+            }
+
+            let controller = UIPrintInteractionController.shared
+            let info = UIPrintInfo.printInfo()
+            info.jobName = jobName
+            info.outputType = .general
+            if let template {
+                let paper = PrintLayout.paperSize(named: template.paper)
+                info.orientation = paper.width > paper.height ? .landscape : .portrait
+            }
+            controller.printInfo = info
+            controller.printingItem = item
+            controller.present(animated: true)
         }
-        controller.printInfo = info
-        controller.printingItem = preparedURL(for: url, template: template)
-        controller.present(animated: true)
     }
 
-    static func preparedURL(for source: URL, template: PrintTemplate?) -> URL {
+    static func preparedURL(for source: URL, template: PrintTemplate?) throws -> URL {
         guard let template else { return source }
-        return (try? PrintTemplateRenderer.render(sourceURL: source, template: template)) ?? source
+        pruneSpoolDirectory()
+        return try PrintTemplateRenderer.render(sourceURL: source, template: template)
+    }
+
+    private static func preparedURLForPresentation(
+        source: URL,
+        template: PrintTemplate?
+    ) async throws -> URL {
+        guard let template else { return source }
+        pruneSpoolDirectory()
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            return try PrintTemplateRenderer.render(sourceURL: source, template: template)
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    /// Keeps failed or abandoned print jobs from accumulating indefinitely.
+    /// The source document remains in the persistent library; only generated
+    /// spool files older than one day are removed.
+    static func pruneSpoolDirectory(now: Date = .now) {
+        let directory = LibraryPaths.applicationRoot()
+            .appending(path: "PrintJobs", directoryHint: .isDirectory)
+        guard let items = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey]
+        ) else { return }
+
+        let cutoff = now.addingTimeInterval(-24 * 60 * 60)
+        for item in items {
+            guard
+                item.pathExtension.lowercased() == "pdf",
+                let values = try? item.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey]),
+                values.isRegularFile == true,
+                let modified = values.contentModificationDate,
+                modified < cutoff
+            else { continue }
+            try? FileManager.default.removeItem(at: item)
+        }
     }
 }
 
 enum PrintTemplateRenderer {
-    enum RenderError: Error {
+    enum RenderError: LocalizedError {
         case unreadablePDF
         case lockedPDF
         case unableToWrite
+
+        var errorDescription: String? {
+            switch self {
+            case .unreadablePDF: String(localized: "无法读取要打印的 PDF。")
+            case .lockedPDF: String(localized: "PDF 已加密，请先解锁后再打印。")
+            case .unableToWrite: String(localized: "无法生成打印版 PDF，请重试。")
+            }
+        }
     }
 
     static func render(sourceURL: URL, template: PrintTemplate, outputDirectory: URL? = nil) throws -> URL {
@@ -63,6 +128,7 @@ enum PrintTemplateRenderer {
                 }
             }
         } catch {
+            try? FileManager.default.removeItem(at: url)
             throw RenderError.unableToWrite
         }
 
@@ -70,6 +136,10 @@ enum PrintTemplateRenderer {
             try? FileManager.default.removeItem(at: url)
             throw RenderError.unableToWrite
         }
+        try? FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: url.path
+        )
         return url
     }
 

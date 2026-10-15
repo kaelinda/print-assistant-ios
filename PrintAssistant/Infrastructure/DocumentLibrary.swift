@@ -107,7 +107,11 @@ final class DocumentLibrary {
 
     func add(_ document: DocumentRecord) throws {
         var document = document
+        let originalURL = document.localURL
         document.localURL = try ingest(document.localURL)
+        let copiedURL = LibraryPaths.isInsideLibrary(originalURL, root: rootURL)
+            ? nil
+            : document.localURL
 
         let previous = documents
         documents.removeAll { $0.id == document.id }
@@ -118,6 +122,9 @@ final class DocumentLibrary {
             persistenceError = nil
         } catch {
             documents = previous
+            if let copiedURL {
+                try? FileManager.default.removeItem(at: copiedURL)
+            }
             persistenceError = error.localizedDescription
             throw error
         }

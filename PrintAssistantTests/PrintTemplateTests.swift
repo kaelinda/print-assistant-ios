@@ -1,6 +1,8 @@
 import CoreGraphics
 import Foundation
+import PDFKit
 import Testing
+import UIKit
 @testable import PrintAssistant
 
 struct PrintTemplateTests {
@@ -64,5 +66,46 @@ struct PrintTemplateTests {
         #expect(PrintLayout.normalizedCopies(0) == 1)
         #expect(PrintLayout.normalizedCopies(120) == 99)
         #expect(PrintLayout.paperSize(named: "Letter") == PrintLayout.letter)
+    }
+
+    @Test
+    func rendererAppliesTemplatePaperAndCopiesToTheOutputPDF() throws {
+        let sourceURL = FileManager.default.temporaryDirectory
+            .appending(path: "template-source-\(UUID().uuidString).pdf")
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appending(path: "template-output-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer {
+            try? FileManager.default.removeItem(at: sourceURL)
+            try? FileManager.default.removeItem(at: outputDirectory)
+        }
+
+        let source = PDFDocument()
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 300)).image { context in
+            UIColor.white.setFill()
+            context.cgContext.fill(CGRect(x: 0, y: 0, width: 200, height: 300))
+        }
+        source.insert(try #require(PDFPage(image: image)), at: 0)
+        #expect(source.write(to: sourceURL))
+
+        let template = PrintTemplate(
+            name: "测试模板",
+            subtitle: "A5 · 2 份",
+            category: .document,
+            paper: "A5",
+            scale: "100%",
+            marginMillimeters: 8,
+            copies: 2
+        )
+        let renderedURL = try PrintTemplateRenderer.render(
+            sourceURL: sourceURL,
+            template: template,
+            outputDirectory: outputDirectory
+        )
+        let rendered = try #require(PDFDocument(url: renderedURL))
+        #expect(rendered.pageCount == 2)
+        let page = try #require(rendered.page(at: 0))
+        let bounds = page.bounds(for: .mediaBox)
+        #expect(abs(bounds.width - PrintLayout.a5.width) < 1)
+        #expect(abs(bounds.height - PrintLayout.a5.height) < 1)
     }
 }

@@ -98,6 +98,7 @@ struct PDFCompressionProcessingView: View {
 
     @MainActor
     private func compress() async {
+        defer { appModel.pdfImportService.cleanup([source]) }
         do {
             let record = try await appModel.runExclusive { () -> DocumentRecord in
                 let filename = "\(String(localized: "压缩文件"))-\(UUID().uuidString).pdf"
@@ -110,7 +111,12 @@ struct PDFCompressionProcessingView: View {
                     source: .generated,
                     localURL: result.url
                 )
-                try appModel.library.add(record)
+                do {
+                    try appModel.library.add(record)
+                } catch {
+                    try? FileManager.default.removeItem(at: result.url)
+                    throw error
+                }
                 return record
             }
             appModel.replaceTop(with: .pdfCompressionSuccess(record.id))
@@ -239,12 +245,15 @@ struct PDFProtectionView: View {
         guard !isWorking else { return }
         isWorking = true
         Task {
+            defer { appModel.pdfImportService.cleanup([source]) }
+            var outputURL: URL?
             do {
                 let name = "\(source.displayName.replacingOccurrences(of: ".pdf", with: ""))-\(String(localized: "已保护")).pdf"
                 let url = try await PDFProtectionService().protect(
                     .init(sourceURL: source.url, userPassword: password, ownerPassword: password),
                     filename: name
                 )
+                outputURL = url
                 let values = try url.resourceValues(forKeys: [.fileSizeKey])
                 let record = DocumentRecord(
                     name: name,
@@ -255,10 +264,18 @@ struct PDFProtectionView: View {
                     isPasswordProtected: true
                 )
                 try await MainActor.run {
-                    try appModel.library.add(record)
+                    do {
+                        try appModel.library.add(record)
+                    } catch {
+                        try? FileManager.default.removeItem(at: url)
+                        throw error
+                    }
                     appModel.replaceTop(with: .pdfProtectionSuccess(record.id))
                 }
             } catch {
+                if let outputURL, !appModel.library.documents.contains(where: { $0.localURL == outputURL }) {
+                    try? FileManager.default.removeItem(at: outputURL)
+                }
                 await MainActor.run {
                     isWorking = false
                     errorMessage = error.localizedDescription

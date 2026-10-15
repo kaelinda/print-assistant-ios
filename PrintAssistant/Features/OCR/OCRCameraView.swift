@@ -91,12 +91,18 @@ struct OCRCameraView: View {
             directoryHint: .notDirectory
         )
         guard document.write(to: url) else {
+            try? FileManager.default.removeItem(at: url)
             throw CocoaError(.fileWriteUnknown)
         }
+        try? FileManager.default.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: url.path
+        )
 
         return OCRInput(
             pdfURL: url,
-            displayName: String(localized: "拍照识别（\(images.count) 页）")
+            displayName: String(localized: "拍照识别（\(images.count) 页）"),
+            temporaryURL: url
         )
     }
 }

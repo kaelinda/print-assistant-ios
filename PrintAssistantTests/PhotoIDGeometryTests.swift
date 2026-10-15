@@ -1,6 +1,8 @@
 import CoreGraphics
 import Foundation
+import PDFKit
 import Testing
+import UIKit
 @testable import PrintAssistant
 
 struct PhotoIDGeometryTests {
@@ -76,5 +78,16 @@ struct PhotoIDGeometryTests {
     func emptyImageProducesAnEmptyCrop() {
         let crop = PhotoIDGeometry.cropRect(imageSize: .zero, aspect: CGSize(width: 25, height: 35), offset: .zero)
         #expect(crop == .zero)
+    }
+
+    @Test
+    func photoIDLayoutUsesTheSelectedSizeInsteadOfAlwaysUsingOneInchSixUp() {
+        let oneInch = PhotoIDGeometry.cardRects(for: PhotoIDGeometry.spec(for: "1 寸"))
+        let twoInch = PhotoIDGeometry.cardRects(for: PhotoIDGeometry.spec(for: "2 寸"))
+
+        #expect(oneInch.count == 6)
+        #expect(twoInch.count == 4)
+        #expect(twoInch[0].width > oneInch[0].width)
+        #expect(twoInch[0].height > oneInch[0].height)
     }
 }

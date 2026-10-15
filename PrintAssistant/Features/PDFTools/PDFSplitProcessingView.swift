@@ -51,7 +51,7 @@ struct PDFSplitProcessingView: View {
             await split()
         }
         .onDisappear {
-            if !completed && errorMessage != nil && draft.source.isTemporary {
+            if !completed && draft.source.isTemporary {
                 appModel.pdfImportService.cleanup([draft.source])
             }
         }

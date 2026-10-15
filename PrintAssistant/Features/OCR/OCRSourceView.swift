@@ -120,17 +120,25 @@ struct OCRSourceView: View {
             defer { isLoadingSelection = false }
             do {
                 let files = try await appModel.pdfImportService.copyIntoLibrary(urls: access.urls)
-                guard let file = files.first else { return }
+                guard let file = files.first else {
+                    appModel.pdfImportService.cleanup(files)
+                    return
+                }
+                if files.count > 1 {
+                    appModel.pdfImportService.cleanup(Array(files.dropFirst()))
+                }
                 let isPDF = file.url.pathExtension.lowercased() == "pdf"
                 if isPDF {
                     appModel.push(.ocrProcessing(.init(
                         pdfURL: file.url,
-                        displayName: file.displayName
+                        displayName: file.displayName,
+                        temporaryURL: file.url
                     )))
                 } else {
                     appModel.push(.ocrProcessing(.init(
                         imageFile: file.url,
-                        displayName: file.displayName
+                        displayName: file.displayName,
+                        temporaryURL: file.url
                     )))
                 }
             } catch {

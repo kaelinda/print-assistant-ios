@@ -70,7 +70,15 @@ struct PDFCompressionService: Sendable {
             ]
 
             guard document.write(to: output, withOptions: options) else {
+                try? FileManager.default.removeItem(at: output)
                 throw CompressionError.unableToWrite
+            }
+
+            do {
+                try Task.checkCancellation()
+            } catch {
+                try? FileManager.default.removeItem(at: output)
+                throw error
             }
 
             guard
@@ -84,6 +92,13 @@ struct PDFCompressionService: Sendable {
 
             let outputValues = try output.resourceValues(forKeys: [.fileSizeKey])
             let compressedBytes = Int64(outputValues.fileSize ?? 0)
+
+            do {
+                try Task.checkCancellation()
+            } catch {
+                try? FileManager.default.removeItem(at: output)
+                throw error
+            }
 
             guard compressedBytes > 0, compressedBytes < originalBytes else {
                 try? FileManager.default.removeItem(at: output)

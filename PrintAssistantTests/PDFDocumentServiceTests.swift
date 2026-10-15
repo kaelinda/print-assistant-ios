@@ -22,4 +22,21 @@ struct PDFDocumentServiceTests {
 
         try? FileManager.default.removeItem(at: url)
     }
+
+    @Test
+    func cancelledPhotoGenerationStopsBeforeWriting() async {
+        let task = Task {
+            await Task.yield()
+            try Task.checkCancellation()
+            try await PDFDocumentService().makePhotoPDF(
+                from: PhotoPDFDraft(items: []),
+                filename: "cancelled-\(UUID().uuidString).pdf"
+            )
+        }
+        task.cancel()
+
+        await #expect(throws: CancellationError.self) {
+            _ = try await task.value
+        }
+    }
 }

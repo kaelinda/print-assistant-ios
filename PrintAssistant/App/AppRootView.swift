@@ -139,6 +139,13 @@ struct AppRootView: View {
             guard let message, !message.isEmpty else { return }
             AccessibilityNotification.Announcement(message).post()
         }
+        .onChange(of: appModel.path) { _, path in
+            // A template is scoped to the template workflow. Once navigation
+            // returns to a root tab, a later direct print must not reuse it.
+            if path.isEmpty {
+                appModel.activePrintTemplate = nil
+            }
+        }
     }
 
     @ViewBuilder

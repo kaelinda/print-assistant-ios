@@ -68,8 +68,15 @@ struct PhotoPDFGeneratingView: View {
                 localURL: url
             )
 
-            try appModel.library.add(record)
+            do {
+                try appModel.library.add(record)
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
+            }
             appModel.replaceTop(with: .photoPDFSuccess(record.id))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }

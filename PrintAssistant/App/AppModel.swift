@@ -129,5 +129,6 @@ final class AppModel {
 
     func popToRoot() {
         path.removeAll()
+        activePrintTemplate = nil
     }
 }

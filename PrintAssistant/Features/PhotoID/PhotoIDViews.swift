@@ -165,9 +165,16 @@ struct PhotoIDGeneratingView: View {
                 source: .generated,
                 localURL: url
             )
-            try appModel.library.add(record)
+            do {
+                try appModel.library.add(record)
+            } catch {
+                try? FileManager.default.removeItem(at: url)
+                throw error
+            }
             let sheetCount = PhotoIDGeometry.spec(for: draft.sizeName).sheetCount
             appModel.replaceTop(with: .photoIDSuccess(record.id, sheetCount: sheetCount))
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -11,23 +11,42 @@ struct OCRInput: Hashable, Sendable {
     let source: Source
     let displayName: String
     let associatedDocumentID: DocumentRecord.ID?
+    let temporaryURL: URL?
 
-    init(imageData: Data, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+    init(
+        imageData: Data,
+        displayName: String,
+        associatedDocumentID: DocumentRecord.ID? = nil,
+        temporaryURL: URL? = nil
+    ) {
         self.source = .imageData(imageData)
         self.displayName = displayName
         self.associatedDocumentID = associatedDocumentID
+        self.temporaryURL = temporaryURL
     }
 
-    init(imageFile: URL, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+    init(
+        imageFile: URL,
+        displayName: String,
+        associatedDocumentID: DocumentRecord.ID? = nil,
+        temporaryURL: URL? = nil
+    ) {
         self.source = .imageFile(imageFile)
         self.displayName = displayName
         self.associatedDocumentID = associatedDocumentID
+        self.temporaryURL = temporaryURL
     }
 
-    init(pdfURL: URL, displayName: String, associatedDocumentID: DocumentRecord.ID? = nil) {
+    init(
+        pdfURL: URL,
+        displayName: String,
+        associatedDocumentID: DocumentRecord.ID? = nil,
+        temporaryURL: URL? = nil
+    ) {
         self.source = .pdfFile(pdfURL)
         self.displayName = displayName
         self.associatedDocumentID = associatedDocumentID
+        self.temporaryURL = temporaryURL
     }
 
     var pdfURL: URL? {

@@ -46,7 +46,10 @@ struct PDFPreviewView: View {
                                 PrintService.present(
                                     url: document.localURL,
                                     jobName: document.name,
-                                    template: appModel.activePrintTemplate
+                                    template: appModel.activePrintTemplate,
+                                    onFailure: { message in
+                                        appModel.transientMessage = message
+                                    }
                                 )
                             } label: {
                                 Image(systemName: "printer")

@@ -51,7 +51,7 @@ struct PDFPageProcessingView: View {
             await generate()
         }
         .onDisappear {
-            if !completed && errorMessage != nil && draft.source.isTemporary {
+            if !completed && draft.source.isTemporary {
                 appModel.pdfImportService.cleanup([draft.source])
             }
         }

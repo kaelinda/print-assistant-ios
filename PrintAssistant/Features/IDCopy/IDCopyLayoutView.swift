@@ -22,7 +22,7 @@ struct IDCopyLayoutView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(.white)
-                            .shadow(color: .black.opacity(0.10), radius: 14, y: 7)
+                            .shadow(color: DesignTokens.Color.shadow.opacity(0.76), radius: 14, y: 7)
 
                         VStack(spacing: PhysicalPrintGeometry.points(millimeters: 20) * scale) {
                             cardPreview(data: draft.frontData, label: "人像面")
@@ -67,7 +67,7 @@ struct IDCopyLayoutView: View {
                 .background(.white)
                 .overlay {
                     RoundedRectangle(cornerRadius: 2)
-                        .stroke(.black.opacity(0.10), lineWidth: 0.5)
+                        .stroke(DesignTokens.Color.shadow.opacity(0.76), lineWidth: 0.5)
                 }
                 .accessibilityLabel(label)
         } else {

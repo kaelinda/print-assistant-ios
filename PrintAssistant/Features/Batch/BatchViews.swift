@@ -76,7 +76,12 @@ struct BatchSelectionView: View {
                             localURL: source.url,
                             isPasswordProtected: inspection.isLocked
                         )
-                        try appModel.library.add(record)
+                        do {
+                            try appModel.library.add(record)
+                        } catch {
+                            appModel.pdfImportService.cleanup([source])
+                            throw error
+                        }
                     }
                 } catch {
                     errorMessage = error.localizedDescription
@@ -179,15 +184,18 @@ struct BatchProcessingView: View {
                 continue
             }
 
+            var outputURL: URL?
             do {
                 let filename = "\(String(localized: "批量压缩"))-\(UUID().uuidString).pdf"
                 let result = try await PDFCompressionService().compress(
                     sourceURL: document.localURL,
                     filename: filename
                 )
+                outputURL = result.url
                 let values = try result.url.resourceValues(forKeys: [.fileSizeKey])
+                let baseName = (document.name as NSString).deletingPathExtension
                 let record = DocumentRecord(
-                    name: "\(document.name)-\(String(localized: "压缩")).pdf",
+                    name: "\(baseName)-\(String(localized: "压缩")).pdf",
                     pageCount: PDFDocument(url: result.url)?.pageCount ?? document.pageCount,
                     byteCount: Int64(values.fileSize ?? 0),
                     source: .generated,
@@ -199,6 +207,11 @@ struct BatchProcessingView: View {
                 job.cancelRemaining()
                 throw CancellationError()
             } catch {
+                // A cancelled or failed compression may have created a partial
+                // output before verification. Never leave it outside the index.
+                if let output = outputURL {
+                    try? FileManager.default.removeItem(at: output)
+                }
                 job.markFailed(sourceID, message: error.localizedDescription)
             }
         }
