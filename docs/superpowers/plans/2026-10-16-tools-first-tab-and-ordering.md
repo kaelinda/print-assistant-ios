@@ -15,9 +15,8 @@
 **Files:**
 - Create: `PrintAssistant/App/ToolCatalog.swift`
 - Create: `PrintAssistant/Infrastructure/ToolOrderStore.swift`
-- Modify: `PrintAssistant.xcodeproj/project.pbxproj` to add both files to the app target’s groups and Sources build phase
 - Test: `PrintAssistantTests/ToolOrderStoreTests.swift`
-- Modify: `PrintAssistant.xcodeproj/project.pbxproj` to add the new test file to the unit-test target’s group and Sources build phase
+- Verify: `project.yml` already includes the complete `PrintAssistant` and `PrintAssistantTests` directories as target sources; regenerate the ignored Xcode project with XcodeGen when needed instead of committing `project.pbxproj`
 
 - [ ] **Step 1: Write failing persistence tests**
 
@@ -49,7 +48,7 @@
 - [ ] **Step 5: Commit the isolated data layer**
 
   ```bash
-  git add PrintAssistant/App/ToolCatalog.swift PrintAssistant/Infrastructure/ToolOrderStore.swift PrintAssistantTests/ToolOrderStoreTests.swift PrintAssistant.xcodeproj/project.pbxproj
+  git add PrintAssistant/App/ToolCatalog.swift PrintAssistant/Infrastructure/ToolOrderStore.swift PrintAssistantTests/ToolOrderStoreTests.swift
   git commit -m "feat: add persistent tool ordering model"
   ```
 
@@ -99,7 +98,6 @@
 **Files:**
 - Modify: `PrintAssistant/Features/OCR/ToolsView.swift`
 - Create: `PrintAssistant/Features/OCR/ToolOrderEditorView.swift`
-- Modify: `PrintAssistant.xcodeproj/project.pbxproj` to add the editor view to the app target’s group and Sources build phase
 - Modify: `PrintAssistant/Localizable.xcstrings` with Chinese and English entries for all new ordering copy
 
 - [ ] **Step 1: Add view-level failing coverage**
@@ -134,7 +132,7 @@
 - [ ] **Step 6: Commit the feature UI**
 
   ```bash
-  git add PrintAssistant/Features/OCR/ToolsView.swift PrintAssistant/Features/OCR/ToolOrderEditorView.swift PrintAssistant/Localizable.xcstrings PrintAssistantUITests/PrintAssistantUITests.swift PrintAssistant.xcodeproj/project.pbxproj
+  git add PrintAssistant/Features/OCR/ToolsView.swift PrintAssistant/Features/OCR/ToolOrderEditorView.swift PrintAssistant/Localizable.xcstrings PrintAssistantUITests/PrintAssistantUITests.swift
   git commit -m "feat: add grouped tool ordering editor"
   ```
 
