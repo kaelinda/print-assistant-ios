@@ -49,6 +49,42 @@ final class PrintAssistantUITests: XCTestCase {
         }
     }
 
+    func testToolOrderEditorBackDoesNotSave() throws {
+        let app = makeApp()
+        app.launch()
+
+        let tools = app.buttons["tab-tools"]
+        XCTAssertTrue(tools.waitForExistence(timeout: 15))
+        tools.tap()
+        let editButton = app.buttons["tool-order-edit"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 10))
+        editButton.tap()
+        XCTAssertTrue(app.navigationBars["调整工具顺序"].waitForExistence(timeout: 10))
+
+        app.navigationBars["调整工具顺序"].buttons.element(boundBy: 0).tap()
+
+        XCTAssertTrue(editButton.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.navigationBars["调整工具顺序"].exists)
+    }
+
+    func testToolOrderEditorInteractiveBackReturnsToTools() throws {
+        let app = makeApp()
+        app.launch()
+
+        let tools = app.buttons["tab-tools"]
+        XCTAssertTrue(tools.waitForExistence(timeout: 15))
+        tools.tap()
+        let editButton = app.buttons["tool-order-edit"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 10))
+        editButton.tap()
+        XCTAssertTrue(app.navigationBars["调整工具顺序"].waitForExistence(timeout: 10))
+
+        app.swipeRight()
+
+        XCTAssertTrue(editButton.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.navigationBars["调整工具顺序"].exists)
+    }
+
     func testPDFToolEntryScreensRender() throws {
         let app = makeApp()
         for (toolTitle, navigationTitle) in [
