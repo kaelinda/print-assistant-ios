@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <filter id="document-shadow" x="246" y="108" width="620" height="798" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#4A3C85" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" fill="#F5F3FF"/>
+
+  <g filter="url(#document-shadow)">
+    <path d="M300 220C300 178.026 334.026 144 376 144H664L800 280V804C800 845.974 765.974 880 724 880H376C334.026 880 300 845.974 300 804V220Z" fill="#FFFFFF"/>
+    <path d="M664 144V254C664 268.359 675.641 280 690 280H800L664 144Z" fill="#DAD6FF"/>
+  </g>
+
+  <circle cx="288" cy="286" r="68" fill="#F15B5D"/>
+  <circle cx="288" cy="446" r="68" fill="#FF9E42"/>
+  <circle cx="288" cy="606" r="68" fill="#7056E8"/>
+
+  <rect x="428" y="350" width="188" height="26" rx="13" fill="#30324A"/>
+</svg>
