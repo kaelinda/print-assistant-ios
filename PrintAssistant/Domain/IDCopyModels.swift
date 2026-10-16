@@ -1,6 +1,22 @@
 import CoreGraphics
 import Foundation
 
+enum IDCopyWatermarkLayout {
+    static let defaultText = String(localized: "此证件仅用于 xxxx")
+    static let maxLength = 40
+    static let fontSize: CGFloat = 24
+    static let opacity: CGFloat = 0.18
+    static let angleDegrees: Double = -18
+    static let columnSpacing: CGFloat = 240
+    static let rowSpacing: CGFloat = 170
+
+    static func normalized(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return String(trimmed.prefix(maxLength))
+    }
+}
+
 struct IDCopyDraft: Hashable, Sendable {
     enum Side: String, Hashable, Sendable {
         case front
@@ -44,6 +60,11 @@ struct IDCopyDraft: Hashable, Sendable {
 
     var frontData: Data?
     var backData: Data?
+    var watermarkText: String = IDCopyWatermarkLayout.defaultText
+
+    var normalizedWatermarkText: String? {
+        IDCopyWatermarkLayout.normalized(watermarkText)
+    }
 
     var isComplete: Bool {
         frontData != nil && backData != nil

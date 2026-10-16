@@ -203,6 +203,11 @@ struct PDFDocumentService: Sendable {
 
                 Self.drawImage(front, inside: frontRect, context: context.cgContext)
                 Self.drawImage(back, inside: backRect, context: context.cgContext)
+                Self.drawWatermark(
+                    draft.normalizedWatermarkText,
+                    in: bounds,
+                    context: context.cgContext
+                )
             }
             try Task.checkCancellation()
         } catch is CancellationError {
@@ -236,6 +241,34 @@ struct PDFDocumentService: Sendable {
         context.saveGState()
         context.clip(to: rect)
         image.draw(in: target)
+        context.restoreGState()
+    }
+
+    private static func drawWatermark(_ text: String?, in bounds: CGRect, context: CGContext) {
+        guard let text else { return }
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: IDCopyWatermarkLayout.fontSize, weight: .semibold),
+            .foregroundColor: UIColor.systemGray.withAlphaComponent(IDCopyWatermarkLayout.opacity)
+        ]
+        let attributedText = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributedText.size()
+        let angle = IDCopyWatermarkLayout.angleDegrees * .pi / 180
+
+        context.saveGState()
+        context.translateBy(x: bounds.midX, y: bounds.midY)
+        context.rotate(by: angle)
+        UIGraphicsPushContext(context)
+        for row in -3...3 {
+            for column in -2...2 {
+                let origin = CGPoint(
+                    x: CGFloat(column) * IDCopyWatermarkLayout.columnSpacing - textSize.width / 2,
+                    y: CGFloat(row) * IDCopyWatermarkLayout.rowSpacing - textSize.height / 2
+                )
+                attributedText.draw(at: origin)
+            }
+        }
+        UIGraphicsPopContext()
         context.restoreGState()
     }
 

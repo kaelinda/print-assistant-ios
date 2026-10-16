@@ -24,4 +24,20 @@ struct IDCopyGeometryTests {
         draft.backData = Data([2])
         #expect(draft.isComplete)
     }
+
+    @Test
+    func newDraftUsesDefaultWatermarkText() {
+        #expect(IDCopyDraft().watermarkText == "此证件仅用于 xxxx")
+    }
+
+    @Test
+    func watermarkTextTrimsAndLimitsLength() {
+        var draft = IDCopyDraft()
+        draft.watermarkText = "  " + String(repeating: "a", count: 45) + "  "
+
+        #expect(draft.normalizedWatermarkText == String(repeating: "a", count: 40))
+
+        draft.watermarkText = " \n\t "
+        #expect(draft.normalizedWatermarkText == nil)
+    }
 }

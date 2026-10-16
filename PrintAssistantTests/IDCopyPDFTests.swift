@@ -40,6 +40,40 @@ struct IDCopyPDFTests {
         }
     }
 
+    @Test
+    func watermarkChangesRenderedPage() async throws {
+        let front = imageData(width: 856, height: 540)
+        let back = imageData(width: 856, height: 540)
+        var withoutWatermark = IDCopyDraft(frontData: front, backData: back)
+        withoutWatermark.watermarkText = ""
+        var withWatermark = withoutWatermark
+        withWatermark.watermarkText = IDCopyWatermarkLayout.defaultText
+
+        let service = PDFDocumentService()
+        let plainURL = try await service.makeIDCopyPDF(
+            from: withoutWatermark,
+            filename: "id-copy-plain-\(UUID().uuidString).pdf"
+        )
+        let markedURL = try await service.makeIDCopyPDF(
+            from: withWatermark,
+            filename: "id-copy-marked-\(UUID().uuidString).pdf"
+        )
+        defer {
+            try? FileManager.default.removeItem(at: plainURL)
+            try? FileManager.default.removeItem(at: markedURL)
+        }
+
+        let plainDocument = try #require(PDFDocument(url: plainURL))
+        let markedDocument = try #require(PDFDocument(url: markedURL))
+        let plainPage = try #require(plainDocument.page(at: 0))
+        let markedPage = try #require(markedDocument.page(at: 0))
+        let thumbnailSize = CGSize(width: 595, height: 842)
+        let plainImage = try #require(plainPage.thumbnail(of: thumbnailSize, for: .mediaBox).pngData())
+        let markedImage = try #require(markedPage.thumbnail(of: thumbnailSize, for: .mediaBox).pngData())
+
+        #expect(plainImage != markedImage)
+    }
+
     private func imageData(width: CGFloat, height: CGFloat) -> Data {
         let image = UIGraphicsImageRenderer(size: CGSize(width: width, height: height)).image { context in
             UIColor.white.setFill()
