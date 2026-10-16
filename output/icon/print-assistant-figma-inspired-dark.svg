@@ -1,20 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
-  <defs>
-    <filter id="document-shadow" x="246" y="108" width="620" height="798" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#080914" flood-opacity="0.14"/>
-    </filter>
-  </defs>
-
+  <!-- Original centered modular mark inspired by collaborative design tools. -->
   <rect width="1024" height="1024" fill="#171827"/>
 
-  <g filter="url(#document-shadow)">
-    <path d="M300 220C300 178.026 334.026 144 376 144H664L800 280V804C800 845.974 765.974 880 724 880H376C334.026 880 300 845.974 300 804V220Z" fill="#FFFFFF"/>
-    <path d="M664 144V254C664 268.359 675.641 280 690 280H800L664 144Z" fill="#4B4774"/>
+  <g>
+    <rect x="330" y="242" width="164" height="164" rx="62" fill="#FF6A72"/>
+    <rect x="530" y="242" width="164" height="164" rx="62" fill="#FFB15C"/>
+
+    <rect x="330" y="430" width="164" height="164" rx="62" fill="#8A73FF"/>
+    <rect x="530" y="430" width="164" height="164" rx="62" fill="#53B9F5"/>
+
+    <rect x="330" y="618" width="164" height="164" rx="62" fill="#43D8B0"/>
   </g>
-
-  <circle cx="288" cy="286" r="68" fill="#FF6A6C"/>
-  <circle cx="288" cy="446" r="68" fill="#FFAD59"/>
-  <circle cx="288" cy="606" r="68" fill="#8A73FF"/>
-
-  <rect x="428" y="350" width="188" height="26" rx="13" fill="#24263B"/>
 </svg>
