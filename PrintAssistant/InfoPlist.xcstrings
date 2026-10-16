@@ -1,74 +1,92 @@
 {
-  "sourceLanguage": "zh-Hans",
-  "strings": {
-    "CFBundleDisplayName": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打印助手"
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Print Assistant"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Print Assistant"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打印助手"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用于扫描文档、身份证和拍摄证件照。"
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PrintAssistant"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Used to scan documents, copy ID cards, and take ID photos."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "PrintAssistant"
           }
         }
       }
     },
-    "NSPhotoLibraryUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用于选择需要转换、识别或排版的图片。"
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to scan documents, copy ID cards, and take ID photos."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Used to choose photos to convert, recognize, or lay out."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于扫描文档、身份证和拍摄证件照。"
           }
         }
       }
     },
-    "NSPhotoLibraryAddUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用于将生成的文件或图片保存到照片。"
+    "NSPhotoLibraryAddUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to save generated files and images to Photos."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Used to save generated files and images to Photos."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于将生成的文件或图片保存到照片。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to choose photos to convert, recognize, or lay out."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于选择需要转换、识别或排版的图片。"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

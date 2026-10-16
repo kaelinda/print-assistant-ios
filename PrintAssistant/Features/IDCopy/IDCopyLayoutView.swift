@@ -4,11 +4,37 @@ struct IDCopyLayoutView: View {
     @Environment(AppModel.self) private var appModel
     let draft: IDCopyDraft
 
+    @State private var watermarkText: String
+
+    init(draft: IDCopyDraft) {
+        self.draft = draft
+        _watermarkText = State(initialValue: draft.watermarkText)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DesignTokens.Spacing.lg) {
                 Text("A4 · 实际尺寸")
                     .font(.headline)
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                    Text("水印文字")
+                        .font(.headline)
+                    TextField("此证件仅用于 xxxx", text: $watermarkText)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+                        .accessibilityLabel("身份证水印文字")
+                        .accessibilityIdentifier("id-copy-watermark-field")
+                        .onChange(of: watermarkText) { _, value in
+                            let limited = String(value.prefix(IDCopyWatermarkLayout.maxLength))
+                            if limited != value {
+                                watermarkText = limited
+                            }
+                        }
+                    Text("水印会以浅色斜向文字显示在 PDF 上，可留空。")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
 
                 GeometryReader { proxy in
                     let a4 = PhysicalPrintGeometry.a4Size
@@ -30,6 +56,14 @@ struct IDCopyLayoutView: View {
                             cardPreview(data: draft.backData, label: "国徽面")
                                 .frame(width: cardSize.width, height: cardSize.height)
                         }
+
+                        if let watermarkText = IDCopyWatermarkLayout.normalized(watermarkText) {
+                            IDCopyWatermarkPreview(
+                                text: watermarkText,
+                                pageSize: pageSize,
+                                scale: scale
+                            )
+                        }
                     }
                     .frame(width: pageSize.width, height: pageSize.height)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
@@ -49,7 +83,9 @@ struct IDCopyLayoutView: View {
                     title: "生成 A4 PDF",
                     state: draft.isComplete ? .enabled : .disabled
                 ) {
-                    appModel.push(.idCopyGenerating(draft))
+                    var updatedDraft = draft
+                    updatedDraft.watermarkText = watermarkText
+                    appModel.push(.idCopyGenerating(updatedDraft))
                 }
             }
             .padding(DesignTokens.Spacing.lg)
@@ -75,5 +111,35 @@ struct IDCopyLayoutView: View {
                 .fill(Color.secondary.opacity(0.08))
                 .overlay { Text(label).font(.caption).foregroundStyle(.secondary) }
         }
+    }
+}
+
+private struct IDCopyWatermarkPreview: View {
+    let text: String
+    let pageSize: CGSize
+    let scale: CGFloat
+
+    var body: some View {
+        ZStack {
+            ForEach(-3...3, id: \.self) { row in
+                ForEach(-2...2, id: \.self) { column in
+                    Text(text)
+                        .font(.system(
+                            size: IDCopyWatermarkLayout.fontSize * scale,
+                            weight: .semibold
+                        ))
+                        .foregroundStyle(.gray.opacity(IDCopyWatermarkLayout.opacity))
+                        .fixedSize()
+                        .position(
+                            x: pageSize.width / 2 + CGFloat(column) * IDCopyWatermarkLayout.columnSpacing * scale,
+                            y: pageSize.height / 2 + CGFloat(row) * IDCopyWatermarkLayout.rowSpacing * scale
+                        )
+                }
+            }
+        }
+        .frame(width: pageSize.width, height: pageSize.height)
+        .rotationEffect(.degrees(IDCopyWatermarkLayout.angleDegrees))
+        .clipped()
+        .allowsHitTesting(false)
     }
 }

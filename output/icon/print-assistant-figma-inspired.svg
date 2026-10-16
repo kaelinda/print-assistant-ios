@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <!-- Original focus-mark composition: one central module with four directional color blocks. -->
+  <rect width="1024" height="1024" fill="#F7F5FF"/>
+
+  <rect x="436" y="220" width="152" height="152" rx="58" fill="#F25B62"/>
+  <rect x="652" y="436" width="152" height="152" rx="58" fill="#FF9F43"/>
+  <rect x="436" y="652" width="152" height="152" rx="58" fill="#2BCB9C"/>
+  <rect x="220" y="436" width="152" height="152" rx="58" fill="#32A7E9"/>
+
+  <rect x="414" y="414" width="196" height="196" rx="72" fill="#7056E8"/>
+  <circle cx="512" cy="512" r="34" fill="#FFFFFF"/>
+</svg>
