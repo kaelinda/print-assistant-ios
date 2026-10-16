@@ -1,14 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
-  <!-- Original centered modular mark inspired by collaborative design tools. -->
+  <!-- Original focus-mark composition: one central module with four directional color blocks. -->
   <rect width="1024" height="1024" fill="#E4E1FF"/>
 
-  <g>
-    <rect x="330" y="242" width="164" height="164" rx="62" fill="#4B4774"/>
-    <rect x="530" y="242" width="164" height="164" rx="62" fill="#4B4774"/>
+  <rect x="436" y="220" width="152" height="152" rx="58" fill="#4B4774"/>
+  <rect x="652" y="436" width="152" height="152" rx="58" fill="#4B4774"/>
+  <rect x="436" y="652" width="152" height="152" rx="58" fill="#4B4774"/>
+  <rect x="220" y="436" width="152" height="152" rx="58" fill="#4B4774"/>
 
-    <rect x="330" y="430" width="164" height="164" rx="62" fill="#4B4774"/>
-    <rect x="530" y="430" width="164" height="164" rx="62" fill="#4B4774"/>
-
-    <rect x="330" y="618" width="164" height="164" rx="62" fill="#4B4774"/>
-  </g>
+  <rect x="414" y="414" width="196" height="196" rx="72" fill="#4B4774"/>
+  <circle cx="512" cy="512" r="34" fill="#FFFFFF"/>
 </svg>

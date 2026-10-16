@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the document-based app icon with a centered, Figma-inspired five-module color mark for all iOS appearance variants.
+**Goal:** Replace the document-based app icon with an original centered focus-mark composition for all iOS appearance variants.
 
 **Architecture:** Keep one editable SVG as the geometry source of truth. Generate light, dark, and tinted SVG variants by deterministic palette substitution, rasterize each to 1024 × 1024 PNG, and replace the existing AppIcon files while leaving `Contents.json` unchanged.
 
@@ -10,14 +10,14 @@
 
 ---
 
-### Task 1: Author the centered geometry
+### Task 1: Author the centered focus-mark geometry
 
 **Files:**
 - Modify: `output/icon/print-assistant-figma-inspired.svg`
 
 - [x] **Step 1: Write the source geometry**
 
-  Use a full-bleed `#F7F5FF` background and five `164 × 164` rounded modules with radius `62` at `(330,242)`, `(530,242)`, `(330,430)`, `(530,430)`, `(330,618)`.
+  Use a full-bleed `#F7F5FF` background, four `152 × 152` outer modules at the cardinal directions, one centered `196 × 196` violet module, and a 34 px white focus dot.
 
 - [x] **Step 2: Render the light source**
 
