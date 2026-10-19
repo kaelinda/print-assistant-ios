@@ -27,7 +27,7 @@ struct IDCopyGeometryTests {
 
     @Test
     func newDraftUsesDefaultWatermarkText() {
-        #expect(IDCopyDraft().watermarkText == "此证件仅用于 xxxx")
+        #expect(IDCopyDraft().watermarkText == IDCopyWatermarkLayout.defaultText)
     }
 
     @Test
